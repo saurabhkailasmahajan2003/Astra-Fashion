@@ -21,7 +21,7 @@ export const getLenses = async (req, res) => {
     const query = {};
 
     if (gender) {
-      query.gender = { $in: [gender, gender.charAt(0).toUpperCase() + gender.slice(1)] };
+      query.gender = gender.toLowerCase();
     }
 
     if (subCategory) {

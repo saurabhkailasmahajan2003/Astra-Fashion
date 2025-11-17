@@ -38,7 +38,11 @@ const ProductDetail = () => {
         'lenses': 'lens',
         'accessories': 'accessories',
         'Accessories': 'accessories',
-        'fashion': 'fashion',
+        'men': 'men',
+        'mens': 'men',
+        'women': 'women',
+        'womens': 'women',
+        'fashion': 'men',
       };
 
       const apiCategory = categoryMap[category] || category;
@@ -51,11 +55,13 @@ const ProductDetail = () => {
         endpoint = `/products/lens/${id}`;
       } else if (apiCategory === 'accessories') {
         endpoint = `/products/accessories/${id}`;
-      } else if (apiCategory === 'fashion') {
-        endpoint = `/products/fashion/${id}`;
+      } else if (apiCategory === 'men') {
+        endpoint = `/products/men/${id}`;
+      } else if (apiCategory === 'women') {
+        endpoint = `/products/women/${id}`;
       } else {
         // Try to find product in any category
-        const categories = ['watches', 'lens', 'accessories', 'fashion'];
+        const categories = ['watches', 'lens', 'accessories', 'men', 'women'];
         for (const cat of categories) {
           try {
             const response = await fetch(`${API_BASE_URL}/products/${cat}/${id}`);
@@ -168,7 +174,7 @@ const ProductDetail = () => {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
           <Link
             to="/"
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-white-700"
           >
             Go Home
           </Link>
@@ -194,7 +200,9 @@ const ProductDetail = () => {
       'lenses': '/lenses',
       'accessories': '/accessories',
       'Accessories': '/accessories',
-      'fashion': '/men', // Default fashion to men's section
+      'men': '/men',
+      'women': '/women',
+      'fashion': '/men',
     };
     return categoryMap[cat] || `/${cat}`;
   };
@@ -210,11 +218,30 @@ const ProductDetail = () => {
     { name: product.name, path: '#' },
   ];
 
+  const highlightCards = [
+    {
+      title: 'Description',
+      text: 'Straight-fit beige trousers ideal for daily comfort.',
+    },
+    {
+      title: 'Description',
+      text: 'Comfortable olive cargo trousers with multiple pockets.',
+    },
+    {
+      title: 'Specifications',
+      text: 'Brand: Highlander · Fabric: Cotton Blend',
+    },
+    {
+      title: 'Specifications',
+      text: 'Brand: Jack & Jones · Fabric: Cotton',
+    },
+  ];
+
   return (
     <>
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
-      <div className="min-h-screen bg-gray-50 py-4">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50 py-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-5 lg:px-6">
           {/* Breadcrumbs */}
           <nav className="mb-4">
             <ol className="flex items-center space-x-2 text-sm">
@@ -234,9 +261,9 @@ const ProductDetail = () => {
           </nav>
 
           {/* Product Title and Rating */}
-          <div className="mb-4">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.name}</h1>
-            <div className="flex items-center gap-4">
+          <div className="mb-3">
+            <h1 className="text-xl md:text-2xl font-semibold text-gray-900 mb-1">{product.name}</h1>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <svg
@@ -266,7 +293,7 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
             {/* Left Column - Image Thumbnails */}
             <div className="lg:col-span-1 flex lg:flex-col gap-2 order-2 lg:order-1">
               {productImages.map((img, index) => (
@@ -290,19 +317,19 @@ const ProductDetail = () => {
             </div>
 
             {/* Center Column - Main Content */}
-            <div className="lg:col-span-6 order-1 lg:order-2">
+            <div className="lg:col-span-5 order-1 lg:order-2">
               {/* Main Product Image */}
-              <div className="bg-white rounded-lg shadow-md p-3 mb-4">
+              <div className="bg-white rounded-lg shadow p-3 mb-3">
                 <img
                   src={productImages[selectedImageIndex]}
                   alt={product.name}
-                  className="w-full h-[350px] object-contain"
+                  className="w-full h-[320px] object-contain"
                   onError={(e) => handleImageError(e, 600, 600)}
                 />
               </div>
 
               {/* Configuration Options */}
-              <div className="bg-white rounded-lg shadow-md p-4 mb-4 space-y-4">
+              <div className="bg-white rounded-lg shadow p-4 mb-4 space-y-4">
                 {/* Model/Variant Selection */}
                 {product.productDetails?.modelNumber && (
                   <div>
@@ -333,7 +360,7 @@ const ProductDetail = () => {
                             onClick={() => setSelectedSize(size)}
                             className={`px-4 py-2 border-2 font-medium transition-all ${
                               selectedSize === size
-                                ? 'border-blue-600 bg-blue-50 text-blue-600'
+                                ? 'border-black-600 bg-black text-white'
                                 : 'border-gray-300 hover:border-gray-400'
                             }`}
                           >
@@ -380,9 +407,9 @@ const ProductDetail = () => {
               </div>
 
               {/* Product Description */}
-              <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Description</h2>
-                <p className="text-gray-700 leading-relaxed">
+              <div className="bg-white rounded-lg shadow p-4 mb-3">
+                <h2 className="text-base font-semibold text-gray-900 mb-2">Description</h2>
+                <p className="text-sm text-gray-700 leading-relaxed">
                   {showFullDescription
                     ? product.description
                     : product.description?.substring(0, 200)}
@@ -399,9 +426,9 @@ const ProductDetail = () => {
               </div>
 
               {/* Specifications */}
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <h2 className="text-lg font-bold text-gray-900 mb-3">Specifications</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg shadow p-4">
+                <h2 className="text-base font-semibold text-gray-900 mb-3">Specifications</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div className="space-y-3">
                     <div>
                       <span className="font-semibold text-gray-700">Brand:</span>{' '}
@@ -471,8 +498,16 @@ const ProductDetail = () => {
             </div>
 
             {/* Right Column - Purchase Sidebar */}
-            <div className="lg:col-span-5 order-3">
-              <div className="bg-white rounded-lg shadow-md p-4 sticky top-20">
+            <div className="lg:col-span-4 order-3">
+              <div className="bg-white-900 text-black p-4 mb-3 space-y-3">
+                {highlightCards.map((item, index) => (
+                  <div key={index}>
+                    <p className="text-xs uppercase tracking-wide text-black-400">{item.title}</p>
+                    <p className="text-sm font-semibold">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white p-4 lg:sticky lg:top-16">
                 {/* Quantity and Total */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -514,7 +549,8 @@ const ProductDetail = () => {
                 <div className="space-y-2 mb-4">
                   <button
                     onClick={handleAddToCart}
-                    className="w-full bg-blue-600 text-white py-2.5 px-4 font-semibold text-sm hover:bg-blue-700 transition-colors"
+                    className="w-full bg-black border-2 border-gray-300 text-white py-2.5 px-4 font-semibold text-sm hover:bg-gray-900 transition-colors
+                  "
                   >
                     + Add to Cart
                   </button>

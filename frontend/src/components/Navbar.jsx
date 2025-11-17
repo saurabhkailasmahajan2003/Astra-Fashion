@@ -14,6 +14,9 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showMenDropdown, setShowMenDropdown] = useState(false);
   const [showWomenDropdown, setShowWomenDropdown] = useState(false);
+  const [showWatchesDropdown, setShowWatchesDropdown] = useState(false);
+  const [showLensesDropdown, setShowLensesDropdown] = useState(false);
+  const [showAccessoriesDropdown, setShowAccessoriesDropdown] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -29,6 +32,8 @@ const Navbar = () => {
       setActiveCategory('watches');
     } else if (location.pathname.startsWith('/lenses')) {
       setActiveCategory('lenses');
+    } else if (location.pathname.startsWith('/accessories')) {
+      setActiveCategory('accessories');
     }
   }, [location.pathname]);
 
@@ -44,7 +49,6 @@ const Navbar = () => {
   const menCategories = [
     { name: 'Shirt', path: '/men/shirt' },
     { name: 'T-Shirt', path: '/men/tshirt' },
-    { name: 'Accessories', path: '/men/accessories' },
     { name: 'Jeans', path: '/men/jeans' },
     { name: 'Trousers', path: '/men/trousers' },
   ];
@@ -52,9 +56,13 @@ const Navbar = () => {
   const womenCategories = [
     { name: 'Shirt', path: '/women/shirt' },
     { name: 'T-Shirt', path: '/women/tshirt' },
-    { name: 'Accessories', path: '/women/accessories' },
     { name: 'Jeans', path: '/women/jeans' },
     { name: 'Trousers', path: '/women/trousers' },
+  ];
+
+  const genderOptions = [
+    { name: 'Men', path: 'men' },
+    { name: 'Women', path: 'women' },
   ];
 
   const handleSearch = (e) => {
@@ -366,31 +374,137 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Watches */}
-            <Link
-              to="/watches"
-              onClick={() => setActiveCategory('watches')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
-                activeCategory === 'watches'
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
-              }`}
+            {/* Watches with Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setShowWatchesDropdown(true)}
+              onMouseLeave={() => setShowWatchesDropdown(false)}
             >
-              Watches
-            </Link>
+              <Link
+                to="/watches"
+                onClick={() => setActiveCategory('watches')}
+                className={`flex items-center gap-1 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  activeCategory === 'watches'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                }`}
+              >
+                <span>Watches</span>
+                <svg 
+                  className={`w-4 h-4 transition-transform ${showWatchesDropdown ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </Link>
+              {showWatchesDropdown && (
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-xl py-2 z-50 transition-all duration-200">
+                  {genderOptions.map((gender) => (
+                    <Link
+                      key={gender.path}
+                      to={`/watches?gender=${gender.path}`}
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors whitespace-nowrap"
+                      onClick={() => {
+                        setActiveCategory('watches');
+                        setShowWatchesDropdown(false);
+                      }}
+                    >
+                      {gender.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            {/* Lenses */}
-            <Link
-              to="/lenses"
-              onClick={() => setActiveCategory('lenses')}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
-                activeCategory === 'lenses'
-                  ? 'text-blue-600 bg-blue-50'
-                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
-              }`}
+            {/* Lenses with Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setShowLensesDropdown(true)}
+              onMouseLeave={() => setShowLensesDropdown(false)}
             >
-              Lenses
-            </Link>
+              <Link
+                to="/lenses"
+                onClick={() => setActiveCategory('lenses')}
+                className={`flex items-center gap-1 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  activeCategory === 'lenses'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                }`}
+              >
+                <span>Lenses</span>
+                <svg 
+                  className={`w-4 h-4 transition-transform ${showLensesDropdown ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </Link>
+              {showLensesDropdown && (
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-xl py-2 z-50 transition-all duration-200">
+                  {genderOptions.map((gender) => (
+                    <Link
+                      key={gender.path}
+                      to={`/lenses?gender=${gender.path}`}
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors whitespace-nowrap"
+                      onClick={() => {
+                        setActiveCategory('lenses');
+                        setShowLensesDropdown(false);
+                      }}
+                    >
+                      {gender.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Accessories with Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setShowAccessoriesDropdown(true)}
+              onMouseLeave={() => setShowAccessoriesDropdown(false)}
+            >
+              <Link
+                to="/accessories"
+                onClick={() => setActiveCategory('accessories')}
+                className={`flex items-center gap-1 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  activeCategory === 'accessories'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
+                }`}
+              >
+                <span>Accessories</span>
+                <svg 
+                  className={`w-4 h-4 transition-transform ${showAccessoriesDropdown ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </Link>
+              {showAccessoriesDropdown && (
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-xl py-2 z-50 transition-all duration-200">
+                  {genderOptions.map((gender) => (
+                    <Link
+                      key={gender.path}
+                      to={`/accessories?gender=${gender.path}`}
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors whitespace-nowrap"
+                      onClick={() => {
+                        setActiveCategory('accessories');
+                        setShowAccessoriesDropdown(false);
+                      }}
+                    >
+                      {gender.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* New Arrival */}
             <Link

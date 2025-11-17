@@ -71,6 +71,7 @@ router.put('/update', protect, async (req, res) => {
           phone: user.phone,
           address: user.address,
           role: user.role,
+          isAdmin: user.isAdmin,
         },
       },
     });

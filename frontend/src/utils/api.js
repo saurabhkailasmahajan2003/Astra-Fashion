@@ -162,30 +162,41 @@ export const productAPI = {
     return apiRequest(`/products/accessories/${id}`);
   },
 
-  getFashionItems: async (params = {}) => {
+  getMenItems: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/products/fashion${queryString ? `?${queryString}` : ''}`);
+    return apiRequest(`/products/men${queryString ? `?${queryString}` : ''}`);
   },
 
-  getFashionItemById: async (id) => {
-    return apiRequest(`/products/fashion/${id}`);
+  getMenItemById: async (id) => {
+    return apiRequest(`/products/men/${id}`);
+  },
+
+  getWomenItems: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/products/women${queryString ? `?${queryString}` : ''}`);
+  },
+
+  getWomenItemById: async (id) => {
+    return apiRequest(`/products/women/${id}`);
   },
 
   // Helper to get all products from all categories
   getAllProducts: async (params = {}) => {
     try {
-      const [watches, lenses, accessories, fashion] = await Promise.all([
+      const [watches, lenses, accessories, men, women] = await Promise.all([
         productAPI.getWatches(params),
         productAPI.getLenses(params),
         productAPI.getAccessories(params),
-        productAPI.getFashionItems(params),
+        productAPI.getMenItems(params),
+        productAPI.getWomenItems(params),
       ]);
 
       const allProducts = [
         ...(watches.success ? watches.data.products : []),
         ...(lenses.success ? lenses.data.products : []),
         ...(accessories.success ? accessories.data.products : []),
-        ...(fashion.success ? fashion.data.products : []),
+        ...(men.success ? men.data.products : []),
+        ...(women.success ? women.data.products : []),
       ];
 
       return {
@@ -199,6 +210,36 @@ export const productAPI = {
         data: { products: [] },
       };
     }
+  },
+};
+
+export const adminAPI = {
+  getSummary: async () => apiRequest('/admin/summary'),
+  getOrders: async () => apiRequest('/admin/orders'),
+  updateOrderStatus: async (orderId, status) =>
+    apiRequest(`/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+  deleteOrder: async (orderId) =>
+    apiRequest(`/admin/orders/${orderId}`, { method: 'DELETE' }),
+  getProducts: async (category) => {
+    const query = category ? `?category=${encodeURIComponent(category)}` : '';
+    return apiRequest(`/admin/products${query}`);
+  },
+  createProduct: async (payload) =>
+    apiRequest('/admin/products', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateProduct: async (id, payload) =>
+    apiRequest(`/admin/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  deleteProduct: async (id, category) => {
+    const query = category ? `?category=${encodeURIComponent(category)}` : '';
+    return apiRequest(`/admin/products/${id}${query}`, { method: 'DELETE' });
   },
 };
 

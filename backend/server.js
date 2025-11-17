@@ -10,7 +10,9 @@ import profileRoutes from './routes/profileRoutes.js';
 import watchRoutes from './routes/product/watch.routes.js';
 import lensRoutes from './routes/product/lens.routes.js';
 import accessoryRoutes from './routes/product/accessory.routes.js';
-import fashionRoutes from './routes/product/fashion.routes.js';
+import menRoutes from './routes/product/men.routes.js';
+import womenRoutes from './routes/product/women.routes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
@@ -37,7 +39,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products/watches', watchRoutes);
 app.use('/api/products/lens', lensRoutes);
 app.use('/api/products/accessories', accessoryRoutes);
-app.use('/api/products/fashion', fashionRoutes);
+app.use('/api/products/men', menRoutes);
+app.use('/api/products/women', womenRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/orders', orderRoutes);

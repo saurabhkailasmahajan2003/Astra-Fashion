@@ -10,8 +10,11 @@ const Home = () => {
   const [watches, setWatches] = useState([]);
   const [lenses, setLenses] = useState([]);
   const [accessories, setAccessories] = useState([]);
-  const [fashionItems, setFashionItems] = useState([]);
+  const [menItems, setMenItems] = useState([]);
+  const [womenItems, setWomenItems] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [newArrivals, setNewArrivals] = useState([]);
+  const [saleItems, setSaleItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Carousel slides data
@@ -36,7 +39,7 @@ const Home = () => {
       title: 'Lenses & Spectacles',
       price: '₹1499',
       description: 'Trendy Eyewear for Every Style',
-      image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=300&fit=crop',
+      image: 'https://res.cloudinary.com/dbt2bu4tg/image/upload/v1763311112/Black_Simple_Watch_Promotion_Advert_Web_Banner_1080_x_300_mm_dusvtn.png',
       link: '/lenses',
       bgGradient: 'from-purple-500 via-purple-600 to-purple-700'
     },
@@ -59,11 +62,22 @@ const Home = () => {
       setIsLoading(true);
       
       // Fetch products from all categories
-      const [watchesRes, lensesRes, accessoriesRes, fashionRes] = await Promise.all([
+      const [
+        watchesRes,
+        lensesRes,
+        accessoriesRes,
+        menRes,
+        womenRes,
+        newArrivalRes,
+        saleRes,
+      ] = await Promise.all([
         productAPI.getWatches({ limit: 4 }),
         productAPI.getLenses({ limit: 4 }),
         productAPI.getAccessories({ limit: 4 }),
-        productAPI.getFashionItems({ limit: 4, gender: 'men' }),
+        productAPI.getMenItems({ limit: 4 }),
+        productAPI.getWomenItems({ limit: 4 }),
+        productAPI.getAllProducts({ limit: 12, isNewArrival: true, sort: 'createdAt', order: 'desc' }),
+        productAPI.getAllProducts({ limit: 12, onSale: true, sort: 'discountPercent', order: 'desc' }),
       ]);
 
       if (watchesRes.success) {
@@ -75,8 +89,23 @@ const Home = () => {
       if (accessoriesRes.success) {
         setAccessories(accessoriesRes.data.products || []);
       }
-      if (fashionRes.success) {
-        setFashionItems(fashionRes.data.products || []);
+      if (menRes.success) {
+        setMenItems(menRes.data.products || []);
+      }
+      if (womenRes.success) {
+        setWomenItems(womenRes.data.products || []);
+      }
+      if (newArrivalRes.success) {
+        const arrivals = (newArrivalRes.data.products || []).sort(
+          (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+        );
+        setNewArrivals(arrivals.slice(0, 8));
+      }
+      if (saleRes.success) {
+        const sale = (saleRes.data.products || []).sort(
+          (a, b) => (b.discountPercent || 0) - (a.discountPercent || 0)
+        );
+        setSaleItems(sale.slice(0, 8));
       }
 
       // Create featured products mix
@@ -84,7 +113,10 @@ const Home = () => {
         ...(watchesRes.success ? watchesRes.data.products.slice(0, 2) : []),
         ...(lensesRes.success ? lensesRes.data.products.slice(0, 2) : []),
         ...(accessoriesRes.success ? accessoriesRes.data.products.slice(0, 2) : []),
-        ...(fashionRes.success ? fashionRes.data.products.slice(0, 2) : []),
+        ...(menRes.success ? menRes.data.products.slice(0, 2) : []),
+        ...(womenRes.success ? womenRes.data.products.slice(0, 2) : []),
+        ...(newArrivalRes.success ? (newArrivalRes.data.products || []).slice(0, 2) : []),
+        ...(saleRes.success ? (saleRes.data.products || []).slice(0, 2) : []),
       ];
       setFeaturedProducts(featured);
     } catch (error) {
@@ -223,8 +255,27 @@ const Home = () => {
         </div>
       )}
 
+      {/* New Arrivals */}
+      {newArrivals.length > 0 && (
+        <div className="bg-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-gray-900">New Arrivals</h2>
+              <Link to="/new-arrival" className="text-blue-600 hover:text-blue-800 font-medium">
+                View All →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {newArrivals.map((product) => (
+                <ProductCard key={product._id || product.id} product={normalizeProduct(product)} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Men's Fashion Collection */}
-      {fashionItems.length > 0 && (
+      {menItems.length > 0 && (
         <div className="bg-white py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-8">
@@ -234,7 +285,45 @@ const Home = () => {
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {fashionItems.map((product) => (
+              {menItems.map((product) => (
+                <ProductCard key={product._id || product.id} product={normalizeProduct(product)} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sale Highlights */}
+      {saleItems.length > 0 && (
+        <div className="bg-white py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 text-red-600">Mega Sale</h2>
+              <Link to="/sale" className="text-red-600 hover:text-red-700 font-semibold">
+                View All →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {saleItems.map((product) => (
+                <ProductCard key={product._id || product.id} product={normalizeProduct(product)} />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Women's Fashion Collection */}
+      {womenItems.length > 0 && (
+        <div className="bg-gray-50 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-gray-900">Women's Collection</h2>
+              <Link to="/women" className="text-blue-600 hover:text-blue-800 font-medium">
+                View All →
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {womenItems.map((product) => (
                 <ProductCard key={product._id || product.id} product={normalizeProduct(product)} />
               ))}
             </div>

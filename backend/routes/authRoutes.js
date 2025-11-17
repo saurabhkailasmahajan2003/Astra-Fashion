@@ -52,6 +52,7 @@ router.post('/signup', async (req, res) => {
           email: user.email,
           phone: user.phone,
           role: user.role,
+          isAdmin: user.isAdmin,
         },
       },
     });
@@ -114,6 +115,7 @@ router.post('/login', async (req, res) => {
           email: user.email,
           phone: user.phone,
           role: user.role,
+          isAdmin: user.isAdmin,
         },
       },
     });
@@ -141,6 +143,7 @@ router.get('/me', protect, async (req, res) => {
           email: req.user.email,
           phone: req.user.phone,
           role: req.user.role,
+          isAdmin: req.user.isAdmin,
         },
       },
     });

@@ -21,7 +21,7 @@ export const getAccessories = async (req, res) => {
     const query = {};
 
     if (gender) {
-      query.gender = gender;
+      query.gender = gender.toLowerCase();
     }
 
     if (subCategory) {
