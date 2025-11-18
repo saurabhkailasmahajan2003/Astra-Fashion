@@ -76,9 +76,6 @@ const accessorySchema = new mongoose.Schema({
     default: 0,
     min: 0,
   },
-  colors: [{
-    type: String,
-  }],
   material: {
     type: String,
   },

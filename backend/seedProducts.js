@@ -484,7 +484,6 @@ const accessoryProducts = [
     ratingsCount: 200,
     reviewsCount: 150,
     stock: 75,
-    color: 'Cognac',
     material: 'Full-Grain Leather',
     closureType: 'Bi-Fold',
     features: ['RFID Blocking', 'Slim Profile', 'Coin Pocket'],
@@ -514,7 +513,6 @@ const accessoryProducts = [
     ratingsCount: 120,
     reviewsCount: 80,
     stock: 100,
-    color: 'Multi-color',
     material: 'Silk Blend',
     features: ['Soft Touch', 'Vibrant Print'],
     productDetails: {

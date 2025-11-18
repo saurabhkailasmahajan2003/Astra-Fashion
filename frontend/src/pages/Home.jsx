@@ -191,19 +191,19 @@ const Home = () => {
       {/* Stories Section - Hashtag Carousel - Above Hero Section */}
       <div className="bg-[#FAF9F6] py-2 sm:py-6 lg:py-1 border-b border-gray-200 mt-0 mb-4 sm:mt-0 sm:mb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center gap-8 sm:gap-12 overflow-x-auto scrollbar-hide pb-2">
+          <div className="flex justify-center gap-8 overflow-x-auto scrollbar-hide pb-2 pl-6 pr-4 sm:px-0 sm:gap-4">
             {stories.map((item, index) => (
               <div 
                 key={index} 
-                className="flex-shrink-0 flex flex-col items-center gap-1.5 cursor-pointer"
+                className={`flex-shrink-0 flex flex-col items-center gap-1.5 cursor-pointer ${index === 0 ? 'ml-6 sm:ml-5' :'ml-4 sm:ml-4'}`}
                 onClick={() => {
                   setActiveStoryIndex(index);
                   setIsStoryViewerOpen(true);
                 }}
               >
-                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-visible p-0.5" style={{ background: 'linear-gradient(45deg, #fbbf24, #ef4444)' }}>
-                  <div className="w-full h-full rounded-full overflow-hidden bg-white p-0.5">
-                    <div className="w-full h-full rounded-full overflow-hidden">
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-visible p-0.5" style={{ background: 'linear-gradient(45deg, #fbbf24, #ef4444)' }}>
+                    <div className="w-full h-full rounded-full overflow-hidden bg-white p-0.5">
+                      <div className="w-full h-full rounded-full overflow-hidden">
                       {item.type === 'video' ? (
                         <video
                           src={item.video}
@@ -414,22 +414,47 @@ const Home = () => {
         </div>
       )}
 
-      {/* Featured Products */}
-      {featuredProducts.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Featured Products</h2>
-            <Link to="/watches" className="text-blue-600 hover:text-blue-800 font-medium">
-              View All →
-            </Link>
+      {/* Featured Stories */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <p className="text-sm uppercase tracking-[0.2em] text-gray-500">Featured Stories</p>
+            <h2 className="text-3xl font-bold text-gray-900">Shop the Latest Drops</h2>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product._id || product.id} product={normalizeProduct(product)} />
-            ))}
-          </div>
+          <Link
+            to="/new-arrival"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 hover:text-gray-600 transition"
+          >
+            Explore Collections →
+          </Link>
         </div>
-      )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Link
+            to="/women/shirt"
+            className="group relative overflow-hidden"
+          >
+            <img
+              src="https://res.cloudinary.com/dbt2bu4tg/image/upload/v1763464307/Black_and_White_Modern_New_Arrivals_Blog_Banner_3_eflp9w.png"
+              alt="Explore Women's Shirts"
+              className="w-full h-72 object-cover duration-500"
+            />
+            <div className="absolute" />
+          </Link>
+
+          <Link
+            to="/men/shirt"
+            className="group relative "
+          >
+            <img
+              src="https://res.cloudinary.com/dbt2bu4tg/image/upload/v1763462593/Red_and_White_Modern_Men_s_Fashion_Facebook_Post_vam9ci.svg"
+              alt="Shop Men's Shirts"
+              className="w-full h-72 object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors" />
+          </Link>
+        </div>
+      </div>
 
       {/* New Arrivals */}
       {newArrivals.length > 0 && (
