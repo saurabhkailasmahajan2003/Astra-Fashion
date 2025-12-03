@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// components/ProductCard.jsx
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -15,6 +16,9 @@ const ProductCard = ({ product }) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [showSizes, setShowSizes] = useState(false);
+  
+  // NEW: State for image blur effect
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Data Normalization
   const productImages = product.images?.length ? product.images : [product.image || product.thumbnail];
@@ -25,7 +29,7 @@ const ProductCard = ({ product }) => {
 
   const handleAddClick = (e) => {
     e.preventDefault();
-    e.stopPropagation(); // Stop navigation
+    e.stopPropagation(); 
     if (sizes.length > 0) {
       setShowSizes(true);
     } else {
@@ -63,12 +67,10 @@ const ProductCard = ({ product }) => {
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
       
       <div 
-        className="group relative w-full select-none"
+        className="group relative w-full select-none animate-fadeIn" // Added animate-fadeIn
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
           setIsHovered(false);
-          // Only close sizes on mouse leave for desktop. 
-          // On mobile, user must click 'X'.
           if (window.matchMedia('(min-width: 768px)').matches) {
             setShowSizes(false);
           }
@@ -79,8 +81,7 @@ const ProductCard = ({ product }) => {
           {/* IMAGE AREA */}
           <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm">
             
-            {/* Wishlist - Top Right */}
-            {/* Increased touch target size for mobile */}
+            {/* Wishlist Button */}
             <button
               onClick={handleWishlist}
               className="absolute top-2 right-2 z-20 p-2 rounded-full bg-white/60 backdrop-blur-md hover:bg-white text-gray-800 transition-all duration-300 active:scale-90"
@@ -102,16 +103,20 @@ const ProductCard = ({ product }) => {
                </span>
             )}
 
-            {/* Image Switcher (Desktop Hover Only) */}
+            {/* Main Image with Blur-Up Effect */}
             <img
               src={isHovered && productImages.length > 1 ? productImages[1] : productImages[0]}
               alt={product.name}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 md:group-hover:scale-105"
+              onLoad={() => setImageLoaded(true)}
+              className={`
+                absolute inset-0 w-full h-full object-cover transition-all duration-700 md:group-hover:scale-105
+                ${imageLoaded ? 'blur-0 scale-100 opacity-100' : 'blur-lg scale-110 opacity-0'}
+              `}
               onError={handleImageError}
               loading="lazy"
             />
 
-            {/* --- THE FLOATING DOCK (Mobile Optimized) --- */}
+            {/* --- THE FLOATING DOCK --- */}
             <div className="absolute bottom-3 inset-x-2 sm:inset-x-4 z-20">
               <div 
                 className={`
@@ -119,11 +124,9 @@ const ProductCard = ({ product }) => {
                   overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]
                   ${showSizes ? 'py-3' : 'h-10 sm:h-12 flex items-center justify-between pl-3 pr-1'}
                 `}
-                onClick={(e) => e.preventDefault()} // Prevent clicking dock from navigating to product
+                onClick={(e) => e.preventDefault()}
               >
-                
                 {!showSizes ? (
-                  // STATE 1: Price + Add Button
                   <>
                     <div className="flex flex-col leading-none justify-center">
                       <span className="font-bold text-gray-900 text-sm sm:text-base">₹{finalPrice.toLocaleString()}</span>
@@ -143,9 +146,7 @@ const ProductCard = ({ product }) => {
                     </button>
                   </>
                 ) : (
-                  // STATE 2: Size Selector
                   <div className="relative px-2 text-center animate-fadeIn w-full">
-                    {/* Header with Close Button */}
                     <div className="flex items-center justify-between mb-2 px-1">
                       <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Select Size</span>
                       <button 
@@ -161,7 +162,6 @@ const ProductCard = ({ product }) => {
                       </button>
                     </div>
 
-                    {/* Size Grid */}
                     <div className="grid grid-cols-4 gap-1.5">
                       {sizes.slice(0, 4).map((size) => (
                         <button
@@ -200,7 +200,6 @@ const ProductCard = ({ product }) => {
                   <p className="text-xs text-gray-500 mt-0.5">{product.category}</p>
                </div>
                
-               {/* Rating - Hidden on very small screens to save space */}
                {product.rating && (
                  <div className="hidden sm:flex items-center gap-1 bg-gray-50 px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-600">
                    <span>★</span>

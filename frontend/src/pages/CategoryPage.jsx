@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
+import ProductSkeleton from '../components/ProductSkeleton'; // Import Skeleton
 import FilterSidebar from '../components/FilterSidebar';
 import { productAPI } from '../utils/api';
 
@@ -8,10 +9,20 @@ const CategoryPage = () => {
   const { gender, category } = useParams();
   const location = useLocation();
   const pathname = location.pathname;
-  const [products, setProducts] = useState([]);
-  const [allProducts, setAllProducts] = useState([]);
+  
+  // State for Data
+  const [allProducts, setAllProducts] = useState([]); // Raw Data from API
+  const [filteredList, setFilteredList] = useState([]); // Data after Filters apply
+  const [products, setProducts] = useState([]); // Data currently Visible (Rendered)
+  
   const [isLoading, setIsLoading] = useState(true);
   const [pageTitle, setPageTitle] = useState('');
+  
+  // State for Infinite Scroll & Filters
+  const [page, setPage] = useState(1);
+  const observerTarget = useRef(null);
+  const ITEMS_PER_PAGE = 12;
+
   const [filters, setFilters] = useState({
     priceRange: null,
     brands: [],
@@ -25,6 +36,7 @@ const CategoryPage = () => {
   const derivedGender = (gender ? gender.toLowerCase() : null) || genderFromPath;
   const derivedCategory = category || pathSegments[1] || null;
 
+  // 1. Initial Data Fetch
   useEffect(() => {
     fetchProducts();
     // Reset filters when category changes
@@ -35,6 +47,102 @@ const CategoryPage = () => {
       sortBy: null,
     });
   }, [pathname, gender, category, location.search]);
+
+  // 2. Filter Logic (Updates filteredList)
+  useEffect(() => {
+    let filtered = [...allProducts];
+
+    // Subcategory Filtering
+    if (derivedGender && derivedCategory) {
+      const categoryMap = {
+        'shirt': { subCategory: 'shirt', displayName: 'Shirt' },
+        'tshirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
+        't-shirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
+        'jeans': { subCategory: 'jeans', displayName: 'Jeans' },
+        'trousers': { subCategory: 'trousers', displayName: 'Trousers' },
+        'accessories': { subCategory: 'accessories', displayName: 'Accessories' },
+      };
+      const categoryInfo = categoryMap[derivedCategory.toLowerCase()];
+      
+      if (categoryInfo) {
+        filtered = filtered.filter(product => {
+          const productSubCategory = (product.subCategory || '').toLowerCase().trim().replace(/-/g, '');
+          const expectedSubCategory = categoryInfo.subCategory.toLowerCase().trim().replace(/-/g, '');
+          return productSubCategory === expectedSubCategory;
+        });
+      }
+    }
+
+    // Price Filter
+    if (filters.priceRange) {
+      filtered = filtered.filter(product => {
+        const price = product.finalPrice || product.price;
+        const { min, max } = filters.priceRange;
+        return price >= min && (max === Infinity || price <= max);
+      });
+    }
+
+    // Brand Filter
+    if (filters.brands && filters.brands.length > 0) {
+      filtered = filtered.filter(product => 
+        filters.brands.includes(product.brand)
+      );
+    }
+
+    // Size Filter
+    if (filters.sizes && filters.sizes.length > 0) {
+      filtered = filtered.filter(product => {
+        if (!product.sizes || !Array.isArray(product.sizes)) return false;
+        return filters.sizes.some(size => product.sizes.includes(size));
+      });
+    }
+
+    // Sort
+    if (filters.sortBy && filters.sortBy !== 'default') {
+      filtered.sort((a, b) => {
+        const priceA = a.finalPrice || a.price;
+        const priceB = b.finalPrice || b.price;
+
+        switch (filters.sortBy) {
+          case 'price-low-high': return priceA - priceB;
+          case 'price-high-low': return priceB - priceA;
+          case 'newest': return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+          default: return 0;
+        }
+      });
+    }
+
+    setFilteredList(filtered);
+    setPage(1); // Reset to page 1 when filters change
+  }, [allProducts, filters, derivedGender, derivedCategory]);
+
+  // 3. Pagination Logic (Updates visible products)
+  useEffect(() => {
+    const visibleCount = page * ITEMS_PER_PAGE;
+    setProducts(filteredList.slice(0, visibleCount));
+  }, [filteredList, page]);
+
+  // 4. Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && products.length < filteredList.length) {
+          setPage(prev => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [products.length, filteredList.length]);
 
   const fetchProducts = async () => {
     try {
@@ -72,7 +180,6 @@ const CategoryPage = () => {
         response = await productAPI.getWomenItems();
         setPageTitle("Women's Collection");
       } else if (activeGender && normalizedCategory) {
-        // Handle subcategories like /men/shirt, /women/tshirt
         const categoryMap = {
           'shirt': { subCategory: 'shirt', displayName: 'Shirt' },
           'tshirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
@@ -100,35 +207,29 @@ const CategoryPage = () => {
           const genderDisplay = activeGender.charAt(0).toUpperCase() + activeGender.slice(1);
           setPageTitle(`${genderDisplay}'s ${categoryInfo.displayName}`);
         } else {
-          // Invalid subcategory
           setPageTitle('Category Not Found');
-          setProducts([]);
+          setAllProducts([]);
           setIsLoading(false);
           return;
         }
       } else {
-        // Default: try to get all products
         response = await productAPI.getAllProducts();
         setPageTitle('All Products');
       }
 
       if (response && response.success) {
-        const fetchedProducts = response.data.products || [];
-        setAllProducts(fetchedProducts);
-        setProducts(fetchedProducts);
+        setAllProducts(response.data.products || []);
       } else {
         setAllProducts([]);
-        setProducts([]);
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      setProducts([]);
+      setAllProducts([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Normalize product for display
   const normalizeProduct = (product) => {
     return {
       ...product,
@@ -143,7 +244,6 @@ const CategoryPage = () => {
     };
   };
 
-  // Extract unique brands and sizes from products
   const brands = useMemo(() => {
     const brandSet = new Set();
     allProducts.forEach(product => {
@@ -162,79 +262,6 @@ const CategoryPage = () => {
     return Array.from(sizeSet).sort();
   }, [allProducts]);
 
-  // Apply filters
-  useEffect(() => {
-    let filtered = [...allProducts];
-
-    // IMPORTANT: Maintain subcategory filtering if we're on a subcategory page
-    // This ensures products are properly sorted/filtered by subCategory
-    if (derivedGender && derivedCategory) {
-      const categoryMap = {
-        'shirt': { subCategory: 'shirt', displayName: 'Shirt' },
-        'tshirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
-        't-shirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
-        'jeans': { subCategory: 'jeans', displayName: 'Jeans' },
-        'trousers': { subCategory: 'trousers', displayName: 'Trousers' },
-        'accessories': { subCategory: 'accessories', displayName: 'Accessories' },
-      };
-      const categoryInfo = categoryMap[derivedCategory.toLowerCase()];
-      
-      if (categoryInfo) {
-        // Filter by subCategory first to ensure only matching subcategory products
-        filtered = filtered.filter(product => {
-          const productSubCategory = (product.subCategory || '').toLowerCase().trim().replace(/-/g, '');
-          const expectedSubCategory = categoryInfo.subCategory.toLowerCase().trim().replace(/-/g, '');
-          return productSubCategory === expectedSubCategory;
-        });
-      }
-    }
-
-    // Filter by price range
-    if (filters.priceRange) {
-      filtered = filtered.filter(product => {
-        const price = product.finalPrice || product.price;
-        const { min, max } = filters.priceRange;
-        return price >= min && (max === Infinity || price <= max);
-      });
-    }
-
-    // Filter by brands
-    if (filters.brands && filters.brands.length > 0) {
-      filtered = filtered.filter(product => 
-        filters.brands.includes(product.brand)
-      );
-    }
-
-    // Filter by sizes
-    if (filters.sizes && filters.sizes.length > 0) {
-      filtered = filtered.filter(product => {
-        if (!product.sizes || !Array.isArray(product.sizes)) return false;
-        return filters.sizes.some(size => product.sizes.includes(size));
-      });
-    }
-
-    // Sort products
-    if (filters.sortBy && filters.sortBy !== 'default') {
-      filtered.sort((a, b) => {
-        const priceA = a.finalPrice || a.price;
-        const priceB = b.finalPrice || b.price;
-
-        switch (filters.sortBy) {
-          case 'price-low-high':
-            return priceA - priceB;
-          case 'price-high-low':
-            return priceB - priceA;
-          case 'newest':
-            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-          default:
-            return 0;
-        }
-      });
-    }
-
-    setProducts(filtered);
-  }, [allProducts, filters, derivedGender, derivedCategory]);
-
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
@@ -248,37 +275,22 @@ const CategoryPage = () => {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading products...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb Navigation */}
+        
+        {/* Breadcrumb Navigation - Always Visible */}
         {(derivedGender || pathname === '/men' || pathname === '/women') && (
           <nav className="mb-4">
             <ol className="flex items-center space-x-2 text-sm">
               <li>
-                <Link to="/" className="text-blue-600 hover:text-blue-800">
-                  Home
-                </Link>
+                <Link to="/" className="text-blue-600 hover:text-blue-800">Home</Link>
               </li>
               <li className="text-gray-400">/</li>
               {derivedGender && (
                 <>
                   <li>
-                    <Link 
-                      to={`/${derivedGender}`}
-                      className="text-blue-600 hover:text-blue-800 capitalize"
-                    >
+                    <Link to={`/${derivedGender}`} className="text-blue-600 hover:text-blue-800 capitalize">
                       {derivedGender}
                     </Link>
                   </li>
@@ -302,11 +314,14 @@ const CategoryPage = () => {
         )}
 
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">{pageTitle}</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isLoading && !pageTitle ? 'Loading...' : pageTitle}
+          </h1>
           {/* Mobile Filter Button */}
           <button
             onClick={() => setShowMobileFilters(!showMobileFilters)}
             className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+            disabled={isLoading}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -316,93 +331,104 @@ const CategoryPage = () => {
         </div>
         
         <div className="flex gap-6">
-          {/* Filter Sidebar - 25% width on desktop, full width on mobile when open */}
+          {/* Filter Sidebar */}
           <div className={`${showMobileFilters ? 'block' : 'hidden'} lg:block w-full lg:w-1/4 flex-shrink-0 ${showMobileFilters ? 'fixed inset-0 z-50 bg-white p-4 overflow-y-auto lg:relative lg:z-auto lg:bg-transparent lg:p-0' : ''}`}>
-            {showMobileFilters && (
-              <div className="lg:hidden flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Filters</h2>
-                <button
-                  onClick={() => setShowMobileFilters(false)}
-                  className="text-gray-600 hover:text-gray-800"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            )}
+             {showMobileFilters && (
+               <div className="lg:hidden flex items-center justify-between mb-4">
+                 <h2 className="text-xl font-bold">Filters</h2>
+                 <button onClick={() => setShowMobileFilters(false)} className="text-gray-600 hover:text-gray-800">
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                   </svg>
+                 </button>
+               </div>
+             )}
+             
+             {/* Mobile Chips */}
+             {derivedGender && (
+               <div className="lg:hidden mb-4 space-y-2">
+                 <p className="text-xs uppercase tracking-wide text-gray-500">Subcategories</p>
+                 <div className="flex flex-wrap gap-2">
+                   {['shirt', 'tshirt', 'jeans', 'trousers', 'accessories'].map((sub) => (
+                     <Link
+                       key={sub}
+                       to={`/${derivedGender}/${sub}`}
+                       className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                         derivedCategory === sub ? 'bg-gray-900 text-white' : 'text-gray-600'
+                       }`}
+                       onClick={() => setShowMobileFilters(false)}
+                     >
+                       {sub === 'tshirt' ? 'T-Shirt' : sub.charAt(0).toUpperCase() + sub.slice(1)}
+                     </Link>
+                   ))}
+                 </div>
+               </div>
+             )}
 
-            {/* Mobile subcategory chips */}
-            {derivedGender && (
-              <div className="lg:hidden mb-4 space-y-2">
-                <p className="text-xs uppercase tracking-wide text-gray-500">Subcategories</p>
-                <div className="flex flex-wrap gap-2">
-                  {['shirt', 'tshirt', 'jeans', 'trousers', 'accessories'].map((sub) => (
-                    <Link
-                      key={sub}
-                      to={`/${derivedGender}/${sub}`}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                        derivedCategory === sub ? 'bg-gray-900 text-white' : 'text-gray-600'
-                      }`}
-                      onClick={() => setShowMobileFilters(false)}
-                    >
-                      {sub === 'tshirt' ? 'T-Shirt' : sub.charAt(0).toUpperCase() + sub.slice(1)}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-            <FilterSidebar
-              filters={filters}
-              onFilterChange={(newFilters) => {
-                handleFilterChange(newFilters);
-                // Close mobile filters on desktop (mobile stays open for better UX)
-                if (window.innerWidth >= 1024) {
-                  setShowMobileFilters(false);
-                }
-              }}
-              onClearFilters={() => {
-                handleClearFilters();
-                if (window.innerWidth >= 1024) {
-                  setShowMobileFilters(false);
-                }
-              }}
-              onCloseMobile={() => setShowMobileFilters(false)}
-              brands={brands}
-              sizes={sizes}
-            />
+             {/* Sidebar Component */}
+             <FilterSidebar
+               filters={filters}
+               onFilterChange={(newFilters) => {
+                 handleFilterChange(newFilters);
+                 if (window.innerWidth >= 1024) setShowMobileFilters(false);
+               }}
+               onClearFilters={() => {
+                 handleClearFilters();
+                 if (window.innerWidth >= 1024) setShowMobileFilters(false);
+               }}
+               onCloseMobile={() => setShowMobileFilters(false)}
+               brands={brands}
+               sizes={sizes}
+             />
           </div>
 
-          {/* Products Grid - 75% width */}
+          {/* Products Grid Area */}
           <div className="flex-1 w-full lg:w-auto">
-            {products.length > 0 ? (
+            {isLoading ? (
+              // SKELETON LOADING STATE
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, i) => (
+                  <ProductSkeleton key={i} />
+                ))}
+              </div>
+            ) : products.length > 0 ? (
               <>
                 <div className="mb-4 text-gray-600">
-                  Showing {products.length} {products.length === 1 ? 'product' : 'products'}
-                  {allProducts.length !== products.length && (
-                    <span className="ml-2 text-sm">
-                      (filtered from {allProducts.length})
-                    </span>
+                  Showing {products.length} of {filteredList.length} products
+                  {allProducts.length !== filteredList.length && (
+                    <span className="ml-2 text-sm">(filtered)</span>
                   )}
                 </div>
+                
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {products.map((product) => (
                     <ProductCard key={product._id || product.id} product={normalizeProduct(product)} />
                   ))}
                 </div>
+
+                {/* Infinite Scroll Trigger & Bottom Skeletons */}
+                <div ref={observerTarget} className="mt-8 h-10 w-full flex justify-center">
+                   {products.length < filteredList.length && (
+                      <div className="animate-pulse flex space-x-2">
+                        <div className="h-2 w-2 bg-gray-300 rounded-full"></div>
+                        <div className="h-2 w-2 bg-gray-300 rounded-full"></div>
+                        <div className="h-2 w-2 bg-gray-300 rounded-full"></div>
+                      </div>
+                   )}
+                </div>
               </>
             ) : (
+              // NO PRODUCTS FOUND STATE
               <div className="text-center py-12">
                 <p className="text-gray-600 text-lg mb-4">No products found matching your filters.</p>
-                {(filters.priceRange || filters.brands?.length > 0 || filters.sizes?.length > 0) && (
+                {(filters.priceRange || filters.brands?.length > 0 || filters.sizes?.length > 0) ? (
                   <button
                     onClick={handleClearFilters}
                     className="text-blue-600 hover:text-blue-800 font-medium"
                   >
                     Clear filters to see all products
                   </button>
-                )}
-                {!(filters.priceRange || filters.brands?.length > 0 || filters.sizes?.length > 0) && (
+                ) : (
                   (derivedGender || pathname === '/men' || pathname === '/women') && (
                     <Link
                       to={`/${derivedGender || pathname.replace('/', '')}`}
