@@ -149,7 +149,7 @@ const ProductCard = ({ product }) => {
                   <div className="relative px-2 text-center w-full animate-fadeIn">
                     <div className="flex items-center justify-between mb-2 px-1">
                       <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Select Size</span>
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowSizes(false);

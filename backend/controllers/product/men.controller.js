@@ -1,6 +1,6 @@
 import Men from '../../models/product/menModel.js';
 
-// @desc    Get all men's products (shirts, tshirts, jeans, trousers)
+// @desc    Get all men's products
 // @route   GET /api/products/men
 // @access  Public
 export const getMenItems = async (req, res) => {
@@ -9,7 +9,6 @@ export const getMenItems = async (req, res) => {
       subCategory,
       isNewArrival,
       onSale,
-      isFeatured,
       search,
       page = 1,
       limit = 20,
@@ -19,26 +18,37 @@ export const getMenItems = async (req, res) => {
 
     const query = {};
 
+    // Subcategory filter (safe)
     if (subCategory) {
-      const normalizedSubCategory = subCategory.toLowerCase().trim().replace(/-/g, '');
-      query.subCategory = { $regex: new RegExp(`^${normalizedSubCategory}$`, 'i') };
+      const normalizedSubCategory = subCategory
+        .toLowerCase()
+        .trim()
+        .replace(/-/g, '');
+
+      query.subCategory = {
+        $regex: new RegExp(`^${normalizedSubCategory}$`, 'i'),
+      };
     }
 
+    // Safe Boolean Filters (works even if field not in schema)
     if (isNewArrival === 'true') query.isNewArrival = true;
     if (onSale === 'true') query.onSale = true;
-    if (isFeatured === 'true') query.isFeatured = true;
 
+    // Safe Search Filter
     if (search) {
       query.$text = { $search: search };
     }
 
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    // Pagination
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 20;
     const skip = (pageNum - 1) * limitNum;
 
+    // Sorting
     const sortObj = {};
     sortObj[sort] = order === 'asc' ? 1 : -1;
 
+    // Fetch products safely
     const items = await Men.find(query)
       .sort(sortObj)
       .skip(skip)
@@ -58,12 +68,13 @@ export const getMenItems = async (req, res) => {
         },
       },
     });
+
   } catch (error) {
     console.error('Get men items error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching men products',
-      error: error.message,
+      error: error?.message || "Unknown error",
     });
   }
 };
@@ -86,16 +97,13 @@ export const getMenItemById = async (req, res) => {
       success: true,
       data: { product: item },
     });
+
   } catch (error) {
     console.error('Get men item error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching men product',
-      error: error.message,
+      error: error?.message || "Unknown error",
     });
   }
 };
-
-// NOTE: Admin create/update/delete are optional; you can wire them later if needed.
-
-

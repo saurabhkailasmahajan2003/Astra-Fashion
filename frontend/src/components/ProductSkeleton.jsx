@@ -1,4 +1,4 @@
-// components/ProductSkeleton.jsx
+
 import React from 'react';
 
 const ProductSkeleton = () => {

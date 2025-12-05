@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import ProductSkeleton from '../components/ProductSkeleton'; // Import Skeleton
 import FilterSidebar from '../components/FilterSidebar';
 import { productAPI } from '../utils/api';
 
@@ -15,7 +14,7 @@ const CategoryPage = () => {
   const [filteredList, setFilteredList] = useState([]); // Data after Filters apply
   const [products, setProducts] = useState([]); // Data currently Visible (Rendered)
   
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [pageTitle, setPageTitle] = useState('');
   
   // State for Infinite Scroll & Filters
@@ -384,61 +383,45 @@ const CategoryPage = () => {
 
           {/* Products Grid Area */}
           <div className="flex-1 w-full lg:w-auto">
-            {isLoading ? (
-              // SKELETON LOADING STATE
-              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {[...Array(8)].map((_, i) => (
-                  <ProductSkeleton key={i} />
-                ))}
-              </div>
-            ) : products.length > 0 ? (
-              <>
-                <div className="mb-4 text-gray-600">
-                  Showing {products.length} of {filteredList.length} products
-                  {allProducts.length !== filteredList.length && (
-                    <span className="ml-2 text-sm">(filtered)</span>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {products.map((product) => (
-                    <ProductCard key={product._id || product.id} product={normalizeProduct(product)} />
-                  ))}
-                </div>
+            {isLoading ? null : (
+              products.length > 0 ? (
+                <>
+                  <div className="mb-4 text-gray-600">
+                    Showing {products.length} of {filteredList.length} products
+                    {allProducts.length !== filteredList.length && (
+                      <span className="ml-2 text-sm">(filtered)</span>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {products.map((product) => (
+                      <ProductCard key={product._id || product.id} product={normalizeProduct(product)} />
+                    ))}
+                  </div>
 
-                {/* Infinite Scroll Trigger & Bottom Skeletons */}
-                <div ref={observerTarget} className="mt-8 h-10 w-full flex justify-center">
-                   {products.length < filteredList.length && (
-                      <div className="animate-pulse flex space-x-2">
-                        <div className="h-2 w-2 bg-gray-300 rounded-full"></div>
-                        <div className="h-2 w-2 bg-gray-300 rounded-full"></div>
-                        <div className="h-2 w-2 bg-gray-300 rounded-full"></div>
-                      </div>
-                   )}
-                </div>
-              </>
-            ) : (
-              // NO PRODUCTS FOUND STATE
-              <div className="text-center py-12">
-                <p className="text-gray-600 text-lg mb-4">No products found matching your filters.</p>
-                {(filters.priceRange || filters.brands?.length > 0 || filters.sizes?.length > 0) ? (
-                  <button
-                    onClick={handleClearFilters}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Clear filters to see all products
-                  </button>
-                ) : (
-                  (derivedGender || pathname === '/men' || pathname === '/women') && (
+                  {/* Infinite Scroll Trigger */}
+                  <div ref={observerTarget} className="h-4"></div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 text-lg mb-4">No products found matching your filters.</p>
+                  {filters.priceRange || filters.brands?.length > 0 || filters.sizes?.length > 0 ? (
+                    <button
+                      onClick={handleClearFilters}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Clear filters to see all products
+                    </button>
+                  ) : (derivedGender || pathname === '/men' || pathname === '/women') ? (
                     <Link
                       to={`/${derivedGender || pathname.replace('/', '')}`}
                       className="text-blue-600 hover:text-blue-800 font-medium"
                     >
                       ← Back to {derivedGender ? `${derivedGender.charAt(0).toUpperCase() + derivedGender.slice(1)}'s Collection` : 'Collection'}
                     </Link>
-                  )
-                )}
-              </div>
+                  ) : null}
+                </div>
+              )
             )}
           </div>
         </div>

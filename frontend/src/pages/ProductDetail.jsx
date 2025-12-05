@@ -219,22 +219,7 @@ const ProductDetail = () => {
   ];
 
   const highlightCards = [
-    {
-      title: 'Description',
-      text: 'Straight-fit beige trousers ideal for daily comfort.',
-    },
-    {
-      title: 'Description',
-      text: 'Comfortable olive cargo trousers with multiple pockets.',
-    },
-    {
-      title: 'Specifications',
-      text: 'Brand: Highlander · Fabric: Cotton Blend',
-    },
-    {
-      title: 'Specifications',
-      text: 'Brand: Jack & Jones · Fabric: Cotton',
-    },
+    
   ];
 
   return (
