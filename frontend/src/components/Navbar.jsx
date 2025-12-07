@@ -146,7 +146,7 @@ const Navbar = () => {
       {/* =======================
           TOP ANNOUNCEMENT BAR
       ======================== */}
-      <div className="bg-black text-white text-[10px] md:text-xs font-bold tracking-widest text-center uppercase">
+      <div className="bg-black text-white text-[10px] md:text-xs font-bold tracking-widest text-center uppercase py-2">
         Free Shipping on Orders Over 10000 - Returns within 30 Days
       </div>
 
@@ -154,10 +154,10 @@ const Navbar = () => {
           MAIN NAVBAR
       ======================== */}
       <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 mt-5 border-b py-3
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 mt-7 border-b py-3
         ${isScrolled 
-          ? 'bg-white/80 backdrop-blur-md border-gray-200 shadow-sm mt-0' 
-          : 'bg-white border-transparent'}`}
+          ? 'bg-white border-gray-500 shadow-sm rounded-full mx-5 mt-0 transition-all duration-400 py-1' 
+          : 'bg-white border-gray-400 transition-all duration-1000 py-1'}`}
       >
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex items-center justify-between h-12">
