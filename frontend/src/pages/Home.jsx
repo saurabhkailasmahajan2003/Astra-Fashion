@@ -119,6 +119,7 @@ const NewsTicker = () => {
             }
             .animate-marquee {
                 animation: marquee 30s linear infinite;
+                background-colour: black;
             }
             `}
       </style>
