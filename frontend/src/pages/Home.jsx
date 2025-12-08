@@ -214,8 +214,8 @@ const Home = () => {
                 className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group"
                 onClick={() => { setActiveStoryIndex(index); setIsStoryViewerOpen(true); }}
               >
-                <div className="relative p-[3px] rounded-full bg-gradient-to-tr from-yellow-400 via-rose-500 to-purple-600 group-hover:scale-105 transition-transform duration-300 shadow-md">
-                  <div className="p-0.5 bg-white rounded-full">
+                <div className="relative p-[0px] rounded-full bg-gradient-to-tr bg-black transition-transform duration-300">
+                  <div className="p-0.5 bg-black rounded-full">
                     <img src={item.image} alt={item.hashtag} className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-white" />
                   </div>
                 </div>
