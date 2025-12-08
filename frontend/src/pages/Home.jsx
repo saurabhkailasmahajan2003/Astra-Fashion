@@ -53,6 +53,54 @@ const fetchAccessories = async () => {
   }
 };
 
+
+
+const LuxeSection = () => {
+  const scrollRef = useRef(null);
+
+  // Sample data to match the image aesthetics
+  const luxeProducts = [
+    {
+      id: 1,
+      brand: "CLINIQUE",
+      image: "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=800&auto=format&fit=crop",
+      link: "/luxe/clinique"
+    },
+    {
+      id: 2,
+      brand: "RABANNE",
+      image: "https://images.unsplash.com/photo-1594035910387-fea4779426e9?q=80&w=800&auto=format&fit=crop",
+      link: "/luxe/rabanne"
+    },
+    {
+      id: 3,
+      brand: "ISSEY MIYAKE",
+      image: "https://images.unsplash.com/photo-1585232561025-aa543d3122c4?q=80&w=800&auto=format&fit=crop",
+      link: "/luxe/issey"
+    },
+    {
+      id: 4,
+      brand: "VERSACE",
+      image: "https://images.unsplash.com/photo-1587017539504-67cfbddac569?q=80&w=800&auto=format&fit=crop",
+      link: "/luxe/versace"
+    },
+  ];
+}
+
+const scroll = (direction) => {
+  if (scrollRef.current) {
+    const { current } = scrollRef;
+    const scrollAmount = 300; // Adjust scroll distance
+    if (direction === 'left') {
+      current.scrollLeft -= scrollAmount;
+    } else {
+      current.scrollLeft += scrollAmount;
+    }
+  }
+};
+
+
+
 // --- NEWS TICKER COMPONENT (New) ---
 const NewsTicker = () => {
   const marqueeContent = "⚡ FREE SHIPPING ON ALL ORDERS OVER ₹999 ⚡ | ✨ NEW SEASON STYLES ADDED DAILY ✨ | 🎁 LIMITED TIME DISCOUNTS ON WATCHES 🎁 | 🛍️ JOIN OUR LOYALTY PROGRAM 🛍️";
@@ -123,6 +171,7 @@ const Home = () => {
     loadAllData();
   }, []);
 
+
   const stories = [
     { hashtag: 'Xmas', emoji: '🎄', image: 'https://res.cloudinary.com/de1bg8ivx/image/upload/v1764741928/IMG_20251123_161820_skzchs.png' },
     { hashtag: 'Desi', emoji: '😎', image: 'https://res.cloudinary.com/de1bg8ivx/image/upload/v1764741995/image-104_iuyyuw.png' },
@@ -134,9 +183,9 @@ const Home = () => {
   ];
 
   const carouselSlides = [
-    { image: 'https://res.cloudinary.com/dbt2bu4tg/image/upload/v1763401012/Beige_Modern_Watch_Collection_Sale_LinkedIn_Post_1080_x_300_px_cwyx08.svg', link: '/watches' },
-    { image: 'https://res.cloudinary.com/dbt2bu4tg/image/upload/v1763314950/Red_Tan_and_Black_Modern_Fashion_Sale_Banner_Landscape_1080_x_300_mm_2_htuw5b.png', link: '/women' },
-    { image: 'https://res.cloudinary.com/dbt2bu4tg/image/upload/v1763312626/Beige_And_Red_Elegant_Wedding_Season_Offers_Banner_1080_x_300_mm_qxjtfv.png', link: '/women' }
+    { image: 'https://res.cloudinary.com/de1bg8ivx/image/upload/v1765179209/62987769-6299-4622-965f-168e87ee3572.png', link: '/watches' },
+    { image: 'https://res.cloudinary.com/de1bg8ivx/image/upload/v1765186313/12de4e83-d480-42c3-ad1d-7078f5d19074.png', link: '/women' },
+    { image: 'https://res.cloudinary.com/de1bg8ivx/image/upload/v1765179353/3f1d3d63-ed99-45d8-af35-94c5cdab655c.png', link: '/women' }
   ];
 
   // --- CAROUSEL LOGIC ---
@@ -225,16 +274,234 @@ const Home = () => {
           </div>
         </div>
       </div>
+      {/* <section className="py-5 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Shop by Category</h2>
+              <p className="text-gray-500 mt-2 font-light">Curated essentials for the modern wardrobe.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                id: 'men',
+                label: 'MEN',
+                sub: 'The Gentleman\'s Edit',
+                image: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?q=80&w=600&auto=format&fit=crop'
+              },
+              {
+                id: 'women',
+                label: 'WOMEN',
+                sub: 'Elegance Redefined',
+                image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=600&auto=format&fit=crop'
+              },
+              {
+                id: 'watches',
+                label: 'WATCHES',
+                sub: 'Timeless Luxury',
+                image: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?q=80&w=600&auto=format&fit=crop'
+              },
+              {
+                id: 'accessories',
+                label: 'ACCESSORIES',
+                sub: 'Finishing Touches',
+                image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=600&auto=format&fit=crop'
+              }
+            ].map((cat) => (
+              <Link
+                key={cat.id}
+                to={`/${cat.id}`}
+                className="group relative block h-96 overflow-hidden rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-500"
+              >
+                
+                <img
+                  src={cat.image}
+                  alt={cat.label}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  loading="lazy"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500"></div>
+
+              
+                <div className="absolute bottom-4 left-4 right-4 p-5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-lg transition-all duration-300 group-hover:bg-white/20 group-hover:bottom-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-xl font-bold text-white tracking-widest">{cat.label}</h3>
+                      <p className="text-gray-200 text-xs mt-1 font-medium">{cat.sub}</p>
+                    </div>
+
+                    
+                    <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center transform translate-x-10 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section> */}
+
+      {/* --- BROWSE BY CATEGORY (Accordion - Light & Compact) --- */}
+      <section className="py-5 mb-20 bg-white">
+        <div className="max-w-7xl mx-auto px-2">
+          <div className="mb-8 text-center">
+             <span className="text-amber-600 font-bold tracking-[0.2em] -text-xl uppercase">Curated Collections</span>
+             <h2 className="text-3xl font-bold text-gray-600 mt-2">Shop By Category</h2>
+          </div>
+
+          {/* Accordion Container - Compact Height */}
+          <div className="flex flex-col md:flex-row h-[500px] md:h-[400px] gap-2 w-full">
+            {[
+              { 
+                id: 'men', 
+                label: 'MEN', 
+                desc: 'Sharp tailoring.',
+                // Fixed Image URL
+                image: 'https://res.cloudinary.com/de1bg8ivx/image/upload/v1765192028/1_08426779-951c-47b7-9feb-ef29ca85b27c_frapuz.webp' 
+              },
+              { 
+                id: 'women', 
+                label: 'WOMEN', 
+                desc: 'Modern silhouettes.',
+                image: 'https://res.cloudinary.com/de1bg8ivx/image/upload/v1765191722/c037121844264e7d40ffc2bb11335a21_vadndt.jpg' 
+              },
+              { 
+                id: 'watches', 
+                label: 'WATCHES', 
+                desc: 'Precision crafted.',
+                image: 'https://res.cloudinary.com/de1bg8ivx/image/upload/v1765191651/photo-1524592094714-0f0654e20314_dv6fdz.avif' 
+              },
+              { 
+                id: 'accessories', 
+                label: 'ACCESSORIES', 
+                desc: 'Final touches.',
+                image: 'https://res.cloudinary.com/de1bg8ivx/image/upload/v1765191618/photo-1515562141207-7a88fb7ce338_k4onlv.avif' 
+              }
+            ].map((cat) => (
+              <Link 
+                key={cat.id} 
+                to={`/${cat.id}`} 
+                className="group relative flex-1 hover:grow-[3] transition-all duration-500 ease-out overflow-hidden rounded-lg cursor-pointer"
+              >
+                {/* Background Image */}
+                <div className="absolute inset-0 w-full h-full">
+                  <img 
+                    src={cat.image} 
+                    alt={cat.label} 
+                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 scale-100 group-hover:scale-105 transition-all duration-500" 
+                  />
+                  {/* Overlay - Lighter for Light Theme */}
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors duration-500"></div>
+                  {/* Text Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80"></div>
+                </div>
+
+                {/* Content */}
+                <div className="absolute bottom-0 w-full p-6 flex flex-col justify-end items-start">
+                  
+                  <h3 className="text-xl md:text-2xl font-bold text-white uppercase tracking-widest mb-1 whitespace-nowrap">
+                    {cat.label}
+                  </h3>
+
+                  <div className="max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100 transition-all duration-500 overflow-hidden">
+                    <p className="text-gray-200 text-sm font-medium mb-2">
+                      {cat.desc}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
 
       <div className="w-fit m-0 p-0 leading-none overflow-visible h-auto w-auto">
         <img
-          src="https://res.cloudinary.com/de1bg8ivx/image/upload/v1765177832/e09e8f87-6c4a-4452-97ea-ca13fbc8f75a.png"
+          src="https://res.cloudinary.com/de1bg8ivx/image/upload/v1765186209/83d30f87-eb70-4315-8291-e1880c206991.png"
+          alt="Full size"
+          className="block w-auto h-auto m-0 p-0 border-none outline-none"
+        />
+      </div>
+      <div className="w-fit m-0 p-0 leading-none overflow-visible h-auto w-auto hidden lg:block">
+        <img
+          src="https://res.cloudinary.com/de1bg8ivx/image/upload/v1765186240/d347cf32-1980-4355-9ac5-9168cf727263.png"
           alt="Full size"
           className="block w-auto h-auto m-0 p-0 border-none outline-none"
         />
       </div>
 
-      {/* --- CATEGORY BANNERS (Attractive 3D Hover Effect) --- */}
+
+
+      {/* --- PRODUCT SECTIONS (Improved Headers and Buttons) --- */}
+
+      <ProductSection
+        title="Fresh Drops"
+        subtitle="Be the first to wear the trend"
+        products={newArrivals}
+        viewAllLink="/new-arrival"
+        isLoading={isLoading}
+      />
+      <div className="w-fit m-0 p-0 leading-none overflow-visible h-auto w-auto hidden lg:block">
+        <h2 className='m-5 text-start text-2xl font-bold'>Coming soon...</h2>
+        <img
+          src="https://res.cloudinary.com/de1bg8ivx/image/upload/v1765187037/ce43b64f-3f08-4346-ad66-1f7306b1006f.png"
+          alt="Full size"
+          className="block w-auto h-auto m-0 p-0 border-none outline-none"
+        />
+      </div>
+
+      <div className="w-fit m-0 p-0 leading-none overflow-visible h-auto w-auto lg:hidden">
+        <img
+          src="https://res.cloudinary.com/de1bg8ivx/image/upload/v1765137210/Black_Elegant_Watch_Special_Offer_Instagram_Post_y3foz1.svg"
+          alt="Full size"
+          className="block w-auto h-auto m-0 p-0 border-none outline-none"
+        />
+      </div>
+
+
+
+      {/* <ProductSection
+        title="Steal Deals"
+        subtitle="Premium styles at unbeatable prices"
+        products={saleItems}
+        viewAllLink="/sale"
+        bgColor="bg-gradient-to-br from-gray-50 to-white"
+        isLoading={isLoading}
+      /> */}
+
+
+
+
+
+      {/* 3. Men & Women - Grid Layout */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid lg:grid-cols-2 gap-4 lg:gap-12">
+          <div className="bg-gray-100 p-6 border border-gray-200">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-extrabold text-gray-900">For Him</h2>
+              <Link to="/men" className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition">View All</Link>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {isLoading ? [1, 2].map(i => <SkeletonCard key={i} />) : menItems.map(p => <ProductCard key={p._id} product={p} />)}
+            </div>
+          </div>
+          <div className="bg-pink-50 p-6 border border-pink-200">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-extrabold text-pink-600">For Her</h2>
+              <Link to="/women" className="text-sm font-semibold text-pink-600 hover:text-pink-800 transition">View All</Link>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {isLoading ? [1, 2].map(i => <SkeletonCard key={i} />) : womenItems.map(p => <ProductCard key={p._id} product={p} />)}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 mt-12 mb-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-extrabold text-gray-900">Featured Collections</h2>
@@ -250,99 +517,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* --- PRODUCT SECTIONS (Improved Headers and Buttons) --- */}
-
-      <ProductSection
-        title="Fresh Drops"
-        subtitle="Be the first to wear the trend"
-        products={newArrivals}
-        viewAllLink="/new-arrival"
-        isLoading={isLoading}
-      />
-      <div className="w-fit m-0 p-0 leading-none overflow-visible h-auto w-auto">
-        <img
-          src="https://res.cloudinary.com/de1bg8ivx/image/upload/v1765176934/06ddc8a6-29de-44f5-887e-c6c960932c07.png"
-          alt="Full size"
-          className="block w-auto h-auto m-0 p-0 border-none outline-none"
-        />
-      </div>
-
-
-      <ProductSection
-        title="Steal Deals"
-        subtitle="Premium styles at unbeatable prices"
-        products={saleItems}
-        viewAllLink="/sale"
-        bgColor="bg-gradient-to-br from-rose-50 to-white"
-        isLoading={isLoading}
-      />
-
-
-
-      {/* 3. Men & Women - Grid Layout */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-extrabold text-gray-900">For Him</h2>
-              <Link to="/men" className="text-sm font-semibold text-rose-600 hover:text-rose-700 transition">View All</Link>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {isLoading ? [1, 2].map(i => <SkeletonCard key={i} />) : menItems.map(p => <ProductCard key={p._id} product={p} />)}
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-extrabold text-gray-900">For Her</h2>
-              <Link to="/women" className="text-sm font-semibold text-rose-600 hover:text-rose-700 transition">View All</Link>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {isLoading ? [1, 2].map(i => <SkeletonCard key={i} />) : womenItems.map(p => <ProductCard key={p._id} product={p} />)}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Accessories - Darker Section for contrast */}
-      <div className="bg-gray-100 py-16 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-extrabold text-center mb-10 text-gray-900">Complete The Look</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {isLoading ? [1, 2, 3, 4].map(i => <SkeletonCard key={i} />) : (
-              <>
-                {watches.slice(0, 2).map(p => <ProductCard key={p._id} product={p} />)}
-                {accessories.slice(0, 2).map(p => <ProductCard key={p._id} product={p} />)}
-              </>
-            )}
-          </div>
-          <div className="text-center mt-10">
-            <Link to="/accessories" className="inline-block bg-rose-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-rose-700 transition shadow-xl transform hover:-translate-y-1">
-              View All Accessories
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* --- BROWSE BY CATEGORY (Attractive Grid) --- */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Shop by Category</h2>
-          <p className="text-gray-500 mb-12">Find exactly what you are looking for</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { id: 'men', emoji: '👔', bg: 'bg-blue-50 text-blue-600' },
-              { id: 'women', emoji: '👗', bg: 'bg-pink-50 text-pink-600' },
-              { id: 'watches', emoji: '⌚', bg: 'bg-amber-50 text-amber-600' },
-              { id: 'lenses', emoji: '👓', bg: 'bg-teal-50 text-teal-600' }
-            ].map((cat) => (
-              <Link key={cat.id} to={`/${cat.id}`} className={`group relative h-48 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 shadow-md hover:shadow-xl transform hover:-translate-y-1 ${cat.bg}`}>
-                <span className="text-4xl mb-3 transform group-hover:scale-110 transition-transform">{cat.emoji}</span>
-                <h3 className="text-xl font-bold uppercase tracking-wider">{cat.id}</h3>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+     
 
       {/* --- STORY VIEWER MODAL (Unchanged) --- */}
       {isStoryViewerOpen && activeStoryIndex !== null && (
@@ -387,7 +562,7 @@ const ProductSection = ({ title, subtitle, products, viewAllLink, bgColor = 'bg-
           {viewAllLink && (
             <Link
               to={viewAllLink}
-              className="hidden sm:inline-block px-6 py-2 rounded-full border border-gray-300 font-semibold text-gray-700 bg-white hover:bg-gray-900 hover:text-white hover:border-transparent transition-all shadow-md transform hover:scale-[1.02]"
+              className="hidden sm:inline-block px-6 py-2 rounded-full border border-gray-300 font-semibold text-white bg-gray-900 hover:bg-gray-900 hover:text-white hover:border-transparent transform"
             >
               View All
             </Link>
@@ -422,3 +597,5 @@ const ProductSection = ({ title, subtitle, products, viewAllLink, bgColor = 'bg-
 };
 
 export default Home;
+
+
