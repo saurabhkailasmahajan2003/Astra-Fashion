@@ -14,6 +14,7 @@ const NAV_LINKS = [
       { name: 'T-Shirts', path: '/men/tshirt' },
       { name: 'Jeans', path: '/men/jeans' },
       { name: 'Trousers', path: '/men/trousers' },
+      { name: 'Shoes', path: '/men/shoes' },
     ] 
   },
   { 

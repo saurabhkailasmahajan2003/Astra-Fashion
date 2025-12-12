@@ -1,6 +1,181 @@
 import Watch from '../../models/product/watch.model.js';
+import WatchNew from '../../models/product/watchNew.model.js';
 
-// @desc    Get all watches
+// Helper function to normalize old schema to common format
+const normalizeOldWatch = (watch) => {
+  const normalized = watch.toObject ? watch.toObject() : watch;
+  
+  // Keep images as array (frontend expects array format)
+  let imagesArray = [];
+  if (normalized.images && Array.isArray(normalized.images)) {
+    imagesArray = normalized.images.filter(img => img); // Remove empty/null values
+  } else if (normalized.thumbnail) {
+    imagesArray = [normalized.thumbnail];
+  } else if (normalized.image) {
+    imagesArray = [normalized.image];
+  }
+
+  // Calculate prices
+  const mrp = normalized.price || normalized.mrp || normalized.originalPrice || 0;
+  const discountPercent = normalized.discountPercent || 0;
+  const finalPrice = normalized.finalPrice || (discountPercent > 0 ? mrp - (mrp * discountPercent / 100) : mrp);
+  const originalPrice = normalized.originalPrice || mrp;
+
+  return {
+    ...normalized,
+    // Map old schema fields to common format
+    title: normalized.name || normalized.title,
+    name: normalized.name || normalized.title, // Keep name for frontend compatibility
+    mrp: mrp,
+    price: mrp, // Keep price for frontend (use mrp as base)
+    originalPrice: originalPrice,
+    finalPrice: finalPrice, // Ensure finalPrice is always set
+    discountPercent: discountPercent,
+    // Keep images as array for frontend compatibility
+    images: imagesArray.length > 0 ? imagesArray : [],
+    // Map product_info if not present
+    product_info: normalized.product_info || {
+      brand: normalized.brand || '',
+      manufacturer: normalized.productDetails?.manufacturer || '',
+      IncludedComponents: normalized.productDetails?.IncludedComponents || ''
+    },
+    // Ensure category is set
+    category: normalized.category || 'WATCHES',
+    // Keep original schema indicator
+    _schemaType: 'old'
+  };
+};
+
+// Helper function to normalize new schema to common format
+const normalizeNewWatch = (watch) => {
+  const normalized = watch.toObject ? watch.toObject() : watch;
+  
+  // Convert images object to array format (frontend expects array)
+  let imagesArray = [];
+  if (normalized.images && typeof normalized.images === 'object' && !Array.isArray(normalized.images)) {
+    // Convert object with image1, image2, etc. to array
+    const imageKeys = Object.keys(normalized.images).sort((a, b) => {
+      // Sort by image1, image2, image3, image4
+      const numA = parseInt(a.replace('image', '')) || 0;
+      const numB = parseInt(b.replace('image', '')) || 0;
+      return numA - numB;
+    });
+    imagesArray = imageKeys
+      .map(key => normalized.images[key])
+      .filter(img => img && typeof img === 'string' && img.trim() !== ''); // Remove empty values
+  } else if (Array.isArray(normalized.images)) {
+    // If it's already an array, use it
+    imagesArray = normalized.images.filter(img => img && typeof img === 'string' && img.trim() !== '');
+  }
+
+  // Fallback to thumbnail or image if images array is empty
+  if (imagesArray.length === 0) {
+    if (normalized.thumbnail) {
+      imagesArray = [normalized.thumbnail];
+    } else if (normalized.image) {
+      imagesArray = [normalized.image];
+    } else if (normalized.images && typeof normalized.images === 'object') {
+      // Try to get any image from the object
+      const firstImage = Object.values(normalized.images).find(img => img && typeof img === 'string' && img.trim() !== '');
+      if (firstImage) {
+        imagesArray = [firstImage];
+      }
+    }
+  }
+
+  // Also set image and thumbnail fields for frontend fallback compatibility
+  const firstImage = imagesArray.length > 0 ? imagesArray[0] : null;
+
+  // Calculate prices
+  const mrp = normalized.mrp || normalized.price || 0;
+  const discountPercent = normalized.discountPercent || 0;
+  const finalPrice = discountPercent > 0 ? mrp - (mrp * discountPercent / 100) : mrp;
+  const originalPrice = mrp; // For new schema, mrp is the original price
+
+  return {
+    ...normalized,
+    // Add name field for frontend compatibility (use title)
+    name: normalized.title || normalized.name,
+    // Add price field for frontend compatibility (use mrp)
+    price: mrp,
+    originalPrice: originalPrice,
+    finalPrice: finalPrice, // Ensure finalPrice is always calculated
+    discountPercent: discountPercent,
+    // Convert images object to array for frontend
+    images: imagesArray,
+    // Add image and thumbnail fields for frontend fallback
+    image: firstImage,
+    thumbnail: firstImage,
+    // Keep original images object for reference
+    imagesObject: normalized.images,
+    // New schema already has the right format, just add indicator
+    _schemaType: 'new'
+  };
+};
+
+// Helper function to build query for old schema
+const buildOldWatchQuery = (reqQuery) => {
+  const query = {};
+
+  if (reqQuery.gender) {
+    query.gender = reqQuery.gender.toLowerCase();
+  }
+
+  if (reqQuery.subCategory) {
+    query.subCategory = reqQuery.subCategory;
+  }
+
+  if (reqQuery.isNewArrival === 'true') {
+    query.isNewArrival = true;
+  }
+
+  if (reqQuery.onSale === 'true') {
+    query.onSale = true;
+  }
+
+  if (reqQuery.isFeatured === 'true') {
+    query.isFeatured = true;
+  }
+
+  if (reqQuery.search) {
+    query.$text = { $search: reqQuery.search };
+  }
+
+  return query;
+};
+
+// Helper function to build query for new schema
+const buildNewWatchQuery = (reqQuery) => {
+  const query = {};
+
+  if (reqQuery.category) {
+    query.category = reqQuery.category.toUpperCase();
+  }
+
+  if (reqQuery.categoryId) {
+    query.categoryId = reqQuery.categoryId;
+  }
+
+  if (reqQuery.isNewArrival === 'true') {
+    query.isNewArrival = true;
+  }
+
+  if (reqQuery.onSale === 'true') {
+    query.onSale = true;
+  }
+
+  if (reqQuery.isFeatured === 'true') {
+    query.isFeatured = true;
+  }
+
+  if (reqQuery.search) {
+    query.$text = { $search: reqQuery.search };
+  }
+
+  return query;
+};
+
+// @desc    Get all watches from both collections
 // @route   GET /api/products/watches
 // @access  Public
 export const getWatches = async (req, res) => {
@@ -8,6 +183,8 @@ export const getWatches = async (req, res) => {
     const {
       gender,
       subCategory,
+      category,
+      categoryId,
       isNewArrival,
       onSale,
       isFeatured,
@@ -18,50 +195,68 @@ export const getWatches = async (req, res) => {
       order = 'desc',
     } = req.query;
 
-    const query = {};
-
-    if (gender) {
-      query.gender = gender.toLowerCase();
-    }
-
-    if (subCategory) {
-      query.subCategory = subCategory;
-    }
-
-    if (isNewArrival === 'true') {
-      query.isNewArrival = true;
-    }
-
-    if (onSale === 'true') {
-      query.onSale = true;
-    }
-
-    if (isFeatured === 'true') {
-      query.isFeatured = true;
-    }
-
-    if (search) {
-      query.$text = { $search: search };
-    }
-
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
+
+    // Build queries for both schemas
+    const oldQuery = buildOldWatchQuery({ gender, subCategory, isNewArrival, onSale, isFeatured, search });
+    const newQuery = buildNewWatchQuery({ category, categoryId, isNewArrival, onSale, isFeatured, search });
+
+    // Fetch from both collections in parallel
+    const [oldWatches, newWatches] = await Promise.all([
+      Watch.find(oldQuery).lean(),
+      WatchNew.find(newQuery).lean()
+    ]);
+
+    // Normalize both schemas to common format
+    const normalizedOld = oldWatches.map(normalizeOldWatch);
+    const normalizedNew = newWatches.map(normalizeNewWatch);
+
+    // Combine and sort all watches
+    let allWatches = [...normalizedOld, ...normalizedNew];
+
+    // Sort combined results
+    const sortOrder = order === 'asc' ? 1 : -1;
+    allWatches.sort((a, b) => {
+      let aVal, bVal;
+
+      switch (sort) {
+        case 'price':
+        case 'mrp':
+          aVal = a.mrp || a.price || 0;
+          bVal = b.mrp || b.price || 0;
+          break;
+        case 'discountPercent':
+          aVal = a.discountPercent || 0;
+          bVal = b.discountPercent || 0;
+          break;
+        case 'title':
+        case 'name':
+          aVal = (a.title || a.name || '').toLowerCase();
+          bVal = (b.title || b.name || '').toLowerCase();
+          break;
+        case 'createdAt':
+        default:
+          aVal = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          bVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          break;
+      }
+
+      if (typeof aVal === 'string') {
+        return aVal.localeCompare(bVal) * sortOrder;
+      }
+      return (aVal - bVal) * sortOrder;
+    });
+
+    // Apply pagination after sorting
+    const total = allWatches.length;
     const skip = (pageNum - 1) * limitNum;
-
-    const sortObj = {};
-    sortObj[sort] = order === 'asc' ? 1 : -1;
-
-    const watches = await Watch.find(query)
-      .sort(sortObj)
-      .skip(skip)
-      .limit(limitNum);
-
-    const total = await Watch.countDocuments(query);
+    const paginatedWatches = allWatches.slice(skip, skip + limitNum);
 
     res.status(200).json({
       success: true,
       data: {
-        products: watches,
+        products: paginatedWatches,
         pagination: {
           page: pageNum,
           limit: limitNum,
@@ -80,12 +275,23 @@ export const getWatches = async (req, res) => {
   }
 };
 
-// @desc    Get single watch
+// @desc    Get single watch from both collections
 // @route   GET /api/products/watches/:id
 // @access  Public
 export const getWatchById = async (req, res) => {
   try {
-    const watch = await Watch.findById(req.params.id);
+    // Try to find in both collections
+    const [oldWatch, newWatch] = await Promise.all([
+      Watch.findById(req.params.id).lean(),
+      WatchNew.findById(req.params.id).lean()
+    ]);
+
+    let watch = null;
+    if (oldWatch) {
+      watch = normalizeOldWatch(oldWatch);
+    } else if (newWatch) {
+      watch = normalizeNewWatch(newWatch);
+    }
 
     if (!watch) {
       return res.status(404).json({

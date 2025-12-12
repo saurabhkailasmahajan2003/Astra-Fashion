@@ -7,6 +7,7 @@ import cartRoutes from './routes/cartRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import watchRoutes from './routes/product/watch.routes.js';
+import watchNewRoutes from './routes/product/watchNew.routes.js';
 import lensRoutes from './routes/product/lens.routes.js';
 import accessoryRoutes from './routes/product/accessory.routes.js';
 import menRoutes from './routes/product/men.routes.js';
@@ -42,6 +43,7 @@ mongoose
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products/watches', watchRoutes);
+app.use('/api/products/watch-new', watchNewRoutes);
 app.use('/api/products/lens', lensRoutes);
 app.use('/api/products/accessories', accessoryRoutes);
 app.use('/api/products/men', menRoutes);

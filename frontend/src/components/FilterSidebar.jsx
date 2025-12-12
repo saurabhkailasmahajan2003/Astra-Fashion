@@ -149,7 +149,7 @@ const FilterSidebar = ({ filters, onFilterChange, onClearFilters, brands = [], s
   };
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-xl overflow-hidden sticky top-20 shadow-sm hover:shadow-md transition-shadow duration-300 mt-0">
+    <div className="w-full bg-white border border-gray-200 overflow-hidden sticky top-20 shadow-sm hover:shadow-md transition-shadow duration-300 mt-0">
       
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between">
@@ -299,7 +299,7 @@ const FilterSidebar = ({ filters, onFilterChange, onClearFilters, brands = [], s
       </div>
 
       {/* Styled Scrollbar CSS */}
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }

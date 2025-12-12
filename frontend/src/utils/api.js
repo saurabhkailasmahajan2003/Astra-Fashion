@@ -242,6 +242,9 @@ export const adminAPI = {
     const query = category ? `?category=${encodeURIComponent(category)}` : '';
     return apiRequest(`/admin/products/${id}${query}`, { method: 'DELETE' });
   },
+  getUsers: async () => apiRequest('/admin/users'),
+  deleteUser: async (userId) =>
+    apiRequest(`/admin/users/${userId}`, { method: 'DELETE' }),
 };
 
 // Review API calls

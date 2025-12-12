@@ -10,6 +10,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  getAllUsers,
+  deleteUser,
 } from '../controllers/admin.controller.js';
 
 const router = express.Router();
@@ -25,6 +27,9 @@ router.get('/products', getAdminProducts);
 router.post('/products', createProduct);
 router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
+
+router.get('/users', getAllUsers);
+router.delete('/users/:id', deleteUser);
 
 export default router;
 

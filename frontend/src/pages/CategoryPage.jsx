@@ -58,6 +58,8 @@ const CategoryPage = () => {
         't-shirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
         'jeans': { subCategory: 'jeans', displayName: 'Jeans' },
         'trousers': { subCategory: 'trousers', displayName: 'Trousers' },
+        'shoes': { subCategory: 'shoes', displayName: 'Shoes' },
+        'shoe': { subCategory: 'shoes', displayName: 'Shoes' },
         'accessories': { subCategory: 'accessories', displayName: 'Accessories' },
       };
       const categoryInfo = categoryMap[derivedCategory.toLowerCase()];
@@ -213,14 +215,16 @@ const CategoryPage = () => {
         response = await productAPI.getWomenItems({ limit: fetchLimit });
         setPageTitle("Women's Collection");
       } else if (activeGender && normalizedCategory) {
-        const categoryMap = {
-          'shirt': { subCategory: 'shirt', displayName: 'Shirt' },
-          'tshirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
-          't-shirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
-          'jeans': { subCategory: 'jeans', displayName: 'Jeans' },
-          'trousers': { subCategory: 'trousers', displayName: 'Trousers' },
-          'accessories': { subCategory: 'accessories', displayName: 'Accessories' },
-        };
+      const categoryMap = {
+        'shirt': { subCategory: 'shirt', displayName: 'Shirt' },
+        'tshirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
+        't-shirt': { subCategory: 'tshirt', displayName: 'T-Shirt' },
+        'jeans': { subCategory: 'jeans', displayName: 'Jeans' },
+        'trousers': { subCategory: 'trousers', displayName: 'Trousers' },
+        'shoes': { subCategory: 'shoes', displayName: 'Shoes' },
+        'shoe': { subCategory: 'shoes', displayName: 'Shoes' },
+        'accessories': { subCategory: 'accessories', displayName: 'Accessories' },
+      };
 
         const categoryInfo = categoryMap[normalizedCategory.toLowerCase()];
         
@@ -382,7 +386,7 @@ const CategoryPage = () => {
                <div className="lg:hidden mb-4 space-y-2">
                  <p className="text-xs uppercase tracking-wide text-gray-500">Subcategories</p>
                  <div className="flex flex-wrap gap-2">
-                   {['shirt', 'tshirt', 'jeans', 'trousers', 'accessories'].map((sub) => (
+                   {['shirt', 'tshirt', 'jeans', 'trousers', 'shoes', 'accessories'].map((sub) => (
                      <Link
                        key={sub}
                        to={`/${derivedGender}/${sub}`}

@@ -16,12 +16,35 @@ const ProductCard = ({ product }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   // Data Normalization
-  const productImages = product.images?.length ? product.images : [product.image || product.thumbnail];
+  // Handle images - support both array and object formats
+  let productImages = [];
+  if (product.images) {
+    if (Array.isArray(product.images)) {
+      productImages = product.images.filter(img => img && img.trim() !== '');
+    } else if (typeof product.images === 'object') {
+      // Convert object format {image1: "url", image2: "url"} to array
+      productImages = Object.values(product.images).filter(img => img && typeof img === 'string' && img.trim() !== '');
+    }
+  }
+  
+  // Fallback to image or thumbnail if images array is empty
+  if (productImages.length === 0) {
+    const fallbackImage = product.image || product.thumbnail || product.images?.image1;
+    if (fallbackImage) {
+      productImages = [fallbackImage];
+    }
+  }
+  
   const sizes = product.sizes || ['S', 'M', 'L', 'XL']; 
-  const finalPrice = product.finalPrice || product.price;
-  const originalPrice = product.originalPrice || product.mrp || product.price;
-  const hasDiscount = originalPrice > finalPrice;
+  const finalPrice = product.finalPrice || product.price || product.mrp || 0;
+  const originalPrice = product.originalPrice || product.mrp || product.price || 0;
+  const hasDiscount = originalPrice > finalPrice && finalPrice > 0;
   const productId = product._id || product.id;
+  
+  // Get the image source with fallback
+  const imageSrc = productImages.length > 0 
+    ? (isHovered && productImages.length > 1 ? productImages[1] : productImages[0])
+    : 'https://via.placeholder.com/400x500?text=No+Image';
 
   const handleAddClick = (e) => {
     e.preventDefault();
@@ -79,19 +102,21 @@ const ProductCard = ({ product }) => {
             )}
 
             {/* Main Image */}
-            <img
-              src={isHovered && productImages.length > 1 ? productImages[1] : productImages[0]}
-              alt={product.name}
-              onLoad={() => setImageLoaded(true)}
-              // OPTIMIZATION: decoding="async" prevents main thread blocking
-              decoding="async"
-              loading="lazy"
-              className={`
-                absolute inset-0 w-full h-full object-cover transition-all duration-500 md:group-hover:scale-105
-                ${imageLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'}
-              `}
-              onError={handleImageError}
-            />
+            {imageSrc && (
+              <img
+                src={imageSrc}
+                alt={product.name || product.title || 'Product'}
+                onLoad={() => setImageLoaded(true)}
+                // OPTIMIZATION: decoding="async" prevents main thread blocking
+                decoding="async"
+                loading="lazy"
+                className={`
+                  absolute inset-0 w-full h-full object-cover transition-all duration-500 md:group-hover:scale-105
+                  ${imageLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'}
+                `}
+                onError={handleImageError}
+              />
+            )}
 
             {/* --- THE FLOATING DOCK --- */}
             <div className="absolute bottom-3 inset-x-2 sm:inset-x-4 z-20">
@@ -106,8 +131,10 @@ const ProductCard = ({ product }) => {
                 {!showSizes ? (
                   <>
                     <div className="flex flex-col leading-none justify-center">
-                      <span className="font-bold text-gray-900 text-sm sm:text-base">₹{finalPrice.toLocaleString()}</span>
-                      {hasDiscount && (
+                      <span className="font-bold text-gray-900 text-sm sm:text-base">
+                        {finalPrice > 0 ? `₹${finalPrice.toLocaleString()}` : 'Price N/A'}
+                      </span>
+                      {hasDiscount && originalPrice > 0 && (
                         <span className="text-[10px] text-gray-500 line-through">₹{originalPrice.toLocaleString()}</span>
                       )}
                     </div>

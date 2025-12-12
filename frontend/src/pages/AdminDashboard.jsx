@@ -92,6 +92,7 @@ const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [productCategory, setProductCategory] = useState('men');
   const [editingProduct, setEditingProduct] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [productForm, setProductForm] = useState({
     category: 'men',
     name: '',
@@ -165,13 +166,26 @@ const AdminDashboard = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // This would need to be implemented in the backend
-      // For now, we'll just show a placeholder
-      setUsers([]);
+      const response = await adminAPI.getUsers();
+      if (response.success) {
+        setUsers(response.data.users || []);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to fetch users' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Delete this user? This action cannot be undone.')) return;
+    try {
+      await adminAPI.deleteUser(userId);
+      setMessage({ type: 'success', text: 'User deleted successfully' });
+      fetchUsers();
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Failed to delete user' });
     }
   };
 
@@ -343,38 +357,39 @@ const AdminDashboard = () => {
       case 'dashboard':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard Overview</h2>
               <button
                 onClick={fetchSummary}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 rounded-lg w-full sm:w-auto"
               >
                 Refresh
               </button>
             </div>
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               {summary ? (
                 <>
-                  <div className="bg-white rounded-2xl border p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border p-4 sm:p-5 shadow-sm">
                     <p className="text-xs uppercase text-gray-500">Revenue</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">
                       ₹{summary.totalRevenue.toLocaleString()}
                     </p>
                   </div>
-                  <div className="bg-white rounded-2xl border p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border p-4 sm:p-5 shadow-sm">
                     <p className="text-xs uppercase text-gray-500">Orders</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">{summary.totalOrders}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">{summary.totalOrders}</p>
                     <p className="text-xs text-gray-500">{summary.pendingOrders} pending</p>
                   </div>
-                  <div className="bg-white rounded-2xl border p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border p-4 sm:p-5 shadow-sm">
                     <p className="text-xs uppercase text-gray-500">Customers</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">{summary.totalUsers}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">{summary.totalUsers}</p>
                   </div>
-                  <div className="bg-white rounded-2xl border p-5 shadow-sm">
+                  <div className="bg-white rounded-2xl border p-4 sm:p-5 shadow-sm">
                     <p className="text-xs uppercase text-gray-500">Inventory</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">
-                      {Object.values(summary.inventory).reduce((a, b) => a + b, 0)}
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">
+                      {Object.values(summary.inventory || {}).reduce((a, b) => a + b, 0)}
                     </p>
+                    <p className="text-xs text-gray-500 mt-1">By category</p>
                   </div>
                 </>
               ) : (
@@ -387,12 +402,12 @@ const AdminDashboard = () => {
       case 'products':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">View Products</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">View Products</h2>
               <select
                 value={productCategory}
                 onChange={(e) => setProductCategory(e.target.value)}
-                className="border rounded-lg px-3 py-2 text-sm"
+                className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
               >
                 {categoryOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -406,35 +421,37 @@ const AdminDashboard = () => {
             ) : products.length === 0 ? (
               <p className="text-sm text-gray-500">No products in this category yet.</p>
             ) : (
-              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {products.map((product) => (
-                  <div key={product._id} className="bg-white border">
+                  <div key={product._id} className="bg-white border rounded-lg overflow-hidden">
                     {product.images?.[0] && (
                       <img
                         src={product.images[0]}
                         alt={product.name}
-                        className="w-full h-60 object-cover mb-3"
+                        className="w-full h-48 sm:h-60 object-cover"
                       />
                     )}
-                    <h3 className="font-semibold text-gray-900 pl-3 pr-3">{product.name}</h3>
-                    <p className="text-sm text-gray-600 pl-3 pr-3">{product.brand}</p>
-                    <p className="text-lg font-bold text-gray-900 mt-2 pl-3 pr-3">
+                    <div className="p-3 sm:p-4">
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2">{product.name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">{product.brand}</p>
+                      <p className="text-base sm:text-lg font-bold text-gray-900 mt-2">
                       ₹{product.finalPrice || product.price}
                     </p>
-                    <p className="text-xs text-gray-500 pl-3">Stock: {product.stock}</p>
+                      <p className="text-xs text-gray-500 mt-1">Stock: {product.stock}</p>
                     <div className="flex gap-2 mt-3">
                       <button
                         onClick={() => handleEditProduct(product)}
-                        className="flex-1 px-3 py-2 text-xs bg-blue-600 text-white hover:bg-blue-700 mb:0 relative"
+                          className="flex-1 px-3 py-2 text-xs bg-blue-600 text-white hover:bg-blue-700 rounded"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(product._id)}
-                        className="flex-1 px-3 py-1.5 text-xs bg-red-600 text-white hover:bg-red-700"
+                          className="flex-1 px-3 py-2 text-xs bg-red-600 text-white hover:bg-red-700 rounded"
                       >
                         Delete
                       </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -446,7 +463,7 @@ const AdminDashboard = () => {
       case 'add-product':
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Add New Product</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Add New Product</h2>
             <form onSubmit={handleCreateProduct} className="bg-white rounded-xl border p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -573,7 +590,7 @@ const AdminDashboard = () => {
                   placeholder="Product description"
                 />
               </div>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -605,17 +622,17 @@ const AdminDashboard = () => {
                   <span className="text-sm text-gray-700">Featured</span>
                 </label>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                  className="px-6 py-2 bg-blue-600 text-white font-semibold hover:bg-blue-700 rounded-lg w-full sm:w-auto"
                 >
                   Add Product
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
+                  className="px-6 py-2 border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 rounded-lg w-full sm:w-auto"
                 >
                   Reset
                 </button>
@@ -627,12 +644,12 @@ const AdminDashboard = () => {
       case 'edit-product':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Edit Product</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Edit Product</h2>
               <select
                 value={productCategory}
                 onChange={(e) => setProductCategory(e.target.value)}
-                className="border rounded-lg px-3 py-2 text-sm"
+                className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
               >
                 {categoryOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -796,10 +813,10 @@ const AdminDashboard = () => {
                     <span className="text-sm text-gray-700">Featured</span>
                   </label>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                    className="px-6 py-2 bg-blue-600 text-white font-semibold hover:bg-blue-700 rounded-lg w-full sm:w-auto"
                   >
                     Update Product
                   </button>
@@ -809,7 +826,7 @@ const AdminDashboard = () => {
                       resetForm();
                       setActiveSection('products');
                     }}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
+                    className="px-6 py-2 border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 rounded-lg w-full sm:w-auto"
                   >
                     Cancel
                   </button>
@@ -832,12 +849,12 @@ const AdminDashboard = () => {
       case 'delete-product':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Delete Products</h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Delete Products</h2>
               <select
                 value={productCategory}
                 onChange={(e) => setProductCategory(e.target.value)}
-                className="border rounded-lg px-3 py-2 text-sm"
+                className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
               >
                 {categoryOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -855,16 +872,16 @@ const AdminDashboard = () => {
                 {products.map((product) => (
                   <div
                     key={product._id}
-                    className="bg-white rounded-xl border p-4 flex items-center justify-between"
+                    className="bg-white rounded-xl border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
                   >
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                      <p className="text-sm text-gray-600">{product.brand}</p>
-                      <p className="text-sm text-gray-500">₹{product.finalPrice || product.price}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{product.name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600">{product.brand}</p>
+                      <p className="text-xs sm:text-sm text-gray-500">₹{product.finalPrice || product.price}</p>
                     </div>
                     <button
                       onClick={() => handleDeleteProduct(product._id)}
-                      className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 text-sm font-semibold"
+                      className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 text-sm font-semibold rounded-lg w-full sm:w-auto"
                     >
                       Delete
                     </button>
@@ -876,76 +893,103 @@ const AdminDashboard = () => {
         );
 
       case 'orders':
-      case 'order-status':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {activeSection === 'orders' ? 'Manage Orders' : 'Order Status Management'}
-              </h2>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Manage Orders</h2>
               <button
                 onClick={fetchOrders}
-                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 w-full sm:w-auto"
               >
                 Refresh
               </button>
             </div>
-            <div className="bg-white rounded-xl border divide-y">
-              {orders.length === 0 ? (
-                <p className="text-gray-500 text-sm py-4 px-6">No orders yet</p>
-              ) : (
-                orders.map((order) => (
-                  <div key={order._id} className="p-6 flex flex-col gap-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <p className="font-semibold text-gray-900">
-                            Order #{order._id?.slice(-8)?.toUpperCase() || 'N/A'}
-                          </p>
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              order.status === 'delivered'
-                                ? 'bg-green-100 text-green-700'
-                                : order.status === 'shipped'
-                                ? 'bg-blue-100 text-blue-700'
-                                : order.status === 'processing'
-                                ? 'bg-yellow-100 text-yellow-700'
-                                : order.status === 'cancelled'
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Pending'}
-                          </span>
+            {orders.length === 0 ? (
+              <div className="bg-white border p-12 text-center">
+                <p className="text-gray-500 text-sm">No orders yet</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6">
+                {orders.map((order) => (
+                  <div key={order._id} className="bg-white border border-gray-200">
+                    {/* Order Header */}
+                    <div className="bg-gray-50 border-b border-gray-200 px-4 sm:px-6 py-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex-1 w-full">
+                          <div className="flex flex-wrap items-center gap-3 mb-2">
+                            <h3 className="font-bold text-gray-900 text-base sm:text-lg">
+                              Order #{order._id?.slice(-8)?.toUpperCase() || 'N/A'}
+                            </h3>
+                            <span
+                              className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                                order.status === 'delivered'
+                                  ? 'bg-green-100 text-green-800'
+                                  : order.status === 'shipped'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : order.status === 'processing'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : order.status === 'cancelled'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Pending'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <span className="text-gray-600">Customer:</span>
+                              <span className="ml-2 font-medium text-gray-900">
+                                {order.user?.name || 'Guest'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Email:</span>
+                              <span className="ml-2 text-gray-900">{order.user?.email || 'N/A'}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Date:</span>
+                              <span className="ml-2 text-gray-900">
+                                {new Date(order.orderDate || order.createdAt).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Items:</span>
+                              <span className="ml-2 font-medium text-gray-900">
+                                {order.items?.length || 0} item(s)
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-600">
-                          Customer: {order.user?.name || 'Guest'} ({order.user?.email || 'N/A'})
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Date: {new Date(order.orderDate || order.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </p>
-                        <p className="text-sm font-semibold text-gray-900 mt-1">
-                          Total: ₹{order.totalAmount?.toLocaleString() || '0'} · {order.items?.length || 0} item(s)
-                        </p>
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Total Amount</p>
+                            <p className="text-xl font-bold text-gray-900 mt-1">
+                              ₹{order.totalAmount?.toLocaleString() || '0'}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteOrder(order._id)}
+                            className="px-4 py-2 bg-red-600 text-white text-xs font-semibold hover:bg-red-700 whitespace-nowrap"
+                          >
+                            Delete Order
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleDeleteOrder(order._id)}
-                        className="text-xs text-red-500 hover:text-red-600 font-semibold px-3 py-1 border border-red-200 hover:bg-red-50"
-                      >
-                        Delete
-                      </button>
                     </div>
-                    <div className="border-t pt-4">
-                      <div className="flex items-center gap-4 mb-3">
-                        <label className="text-sm font-semibold text-gray-700">Update Status:</label>
+
+                    {/* Order Items Section */}
+                    <div className="px-4 sm:px-6 py-4">
+                      <div className="mb-4 pb-4 border-b border-gray-200">
+                        <label className="block text-sm font-semibold text-gray-900 mb-2">Update Order Status:</label>
                         <select
                           value={order.status || 'pending'}
                           onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
-                          className="text-sm border rounded-lg px-4 py-2 flex-1 max-w-xs"
+                          className="text-sm border border-gray-300 px-4 py-2 w-full sm:w-64 bg-white"
                         >
                           {statusOptions.map((status) => (
                             <option key={status} value={status}>
@@ -954,48 +998,260 @@ const AdminDashboard = () => {
                           ))}
                         </select>
                       </div>
-                      <div className="mt-4">
-                        <h4 className="text-sm font-semibold text-gray-900 mb-2">Order Items:</h4>
-                        <div className="space-y-2">
+
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">Order Items</h4>
+                        <div className="space-y-3">
                           {order.items?.map((item, index) => (
-                            <div key={index} className="flex items-center gap-3 text-sm">
-                              {item.product?.images?.[0] && (
+                            <div
+                              key={index}
+                              className="border border-gray-200 bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+                            >
+                              {item.product?.images?.[0] ? (
                                 <img
                                   src={item.product.images[0]}
                                   alt={item.product.name}
-                                  className="w-12 h-12 object-cover rounded"
+                                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover border border-gray-200 flex-shrink-0"
                                 />
+                              ) : (
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 border border-gray-200 flex-shrink-0 flex items-center justify-center">
+                                  <span className="text-xs text-gray-400">No Image</span>
+                                </div>
                               )}
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900">{item.product?.name || 'Product'}</p>
-                                <p className="text-xs text-gray-600">
-                                  Qty: {item.quantity} · ₹{item.price?.toLocaleString()} each
+                              <div className="flex-1 min-w-0 w-full sm:w-auto">
+                                <h5 className="font-semibold text-gray-900 text-sm sm:text-base mb-1">
+                                  {item.product?.name || 'Product Name Not Available'}
+                                </h5>
+                                {item.product?.brand && (
+                                  <p className="text-xs text-gray-600 mb-2">Brand: {item.product.brand}</p>
+                                )}
+                                <div className="flex flex-wrap gap-4 text-xs sm:text-sm">
+                                  <div>
+                                    <span className="text-gray-600">Quantity:</span>
+                                    <span className="ml-2 font-medium text-gray-900">{item.quantity}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-600">Unit Price:</span>
+                                    <span className="ml-2 font-medium text-gray-900">
+                                      ₹{item.price?.toLocaleString() || '0'}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-600">Size:</span>
+                                    <span className="ml-2 font-medium text-gray-900">
+                                      {item.selectedSize || 'N/A'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right flex-shrink-0 w-full sm:w-auto sm:ml-auto">
+                                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Subtotal</p>
+                                <p className="text-lg font-bold text-gray-900">
+                                  ₹{((item.price || 0) * (item.quantity || 0)).toLocaleString()}
                                 </p>
                               </div>
-                              <p className="font-semibold text-gray-900">
-                                ₹{(item.price * item.quantity).toLocaleString()}
-                              </p>
                             </div>
                           ))}
                         </div>
                       </div>
                     </div>
                   </div>
-                ))
-              )}
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'order-status':
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Order Status Management</h2>
+              <button
+                onClick={fetchOrders}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 w-full sm:w-auto"
+              >
+                Refresh
+              </button>
             </div>
+            {orders.length === 0 ? (
+              <div className="bg-white border p-12 text-center">
+                <p className="text-gray-500 text-sm">No orders yet</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6">
+                {orders.map((order) => (
+                  <div key={order._id} className="bg-white border border-gray-200">
+                    <div className="px-4 sm:px-6 py-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex-1 w-full space-y-3">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="font-bold text-gray-900 text-base sm:text-lg">
+                              Order #{order._id?.slice(-8)?.toUpperCase() || 'N/A'}
+                            </h3>
+                            <span
+                              className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                                order.status === 'delivered'
+                                  ? 'bg-green-100 text-green-800'
+                                  : order.status === 'shipped'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : order.status === 'processing'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : order.status === 'cancelled'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Pending'}
+                            </span>
+                          </div>
+                          <div className="space-y-1 text-sm">
+                            <div>
+                              <span className="text-gray-600">Customer:</span>
+                              <span className="ml-2 font-medium text-gray-900">
+                                {order.user?.name || 'Guest'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Email:</span>
+                              <span className="ml-2 text-gray-900">{order.user?.email || 'N/A'}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Date:</span>
+                              <span className="ml-2 text-gray-900">
+                                {new Date(order.orderDate || order.createdAt).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Items:</span>
+                              <span className="ml-2 font-medium text-gray-900">
+                                {order.items?.length || 0} item(s)
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-3 w-full sm:w-auto">
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Amount</p>
+                            <p className="text-xl font-bold text-gray-900">
+                              ₹{order.totalAmount?.toLocaleString() || '0'}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteOrder(order._id)}
+                            className="px-4 py-2 bg-red-600 text-white text-xs font-semibold hover:bg-red-700 whitespace-nowrap w-full sm:w-auto"
+                          >
+                            Delete Order
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <label className="block text-sm font-semibold text-gray-900 mb-2">Update Order Status:</label>
+                        <select
+                          value={order.status || 'pending'}
+                          onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
+                          className="text-sm border border-gray-300 px-4 py-2 w-full sm:w-64 bg-white"
+                        >
+                          {statusOptions.map((status) => (
+                            <option key={status} value={status}>
+                              {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
 
       case 'users':
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Manage Users</h2>
-            <div className="bg-white rounded-xl border p-6">
-              <p className="text-gray-600">
-                User management functionality will be available soon. This feature requires backend implementation.
-              </p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Manage Users</h2>
+              <button
+                onClick={fetchUsers}
+                className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 w-full sm:w-auto"
+              >
+                Refresh
+              </button>
             </div>
+            {loading ? (
+              <div className="bg-white border p-12 text-center">
+                <p className="text-gray-500 text-sm">Loading users...</p>
+              </div>
+            ) : users.length === 0 ? (
+              <div className="bg-white border p-12 text-center">
+                <p className="text-gray-500 text-sm">No users found</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6">
+                {users.map((user) => (
+                  <div key={user._id} className="bg-white border border-gray-200">
+                    <div className="px-4 sm:px-6 py-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex-1 w-full space-y-3">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="font-bold text-gray-900 text-base sm:text-lg">
+                              {user.name || 'No Name'}
+                            </h3>
+                            {user.isAdmin && (
+                              <span className="px-3 py-1 text-xs font-semibold uppercase tracking-wide bg-blue-100 text-blue-800">
+                                Admin
+                              </span>
+                            )}
+                          </div>
+                          <div className="space-y-1 text-sm">
+                            <div>
+                              <span className="text-gray-600">Email:</span>
+                              <span className="ml-2 text-gray-900">{user.email || 'N/A'}</span>
+                            </div>
+                            {user.phone && (
+                              <div>
+                                <span className="text-gray-600">Phone:</span>
+                                <span className="ml-2 text-gray-900">{user.phone}</span>
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-gray-600">User ID:</span>
+                              <span className="ml-2 text-gray-900 font-mono text-xs">
+                                {user._id?.slice(-8)?.toUpperCase() || 'N/A'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Joined:</span>
+                              <span className="ml-2 text-gray-900">
+                                {new Date(user.createdAt).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+                          <button
+                            onClick={() => handleDeleteUser(user._id)}
+                            className="px-4 py-2 bg-red-600 text-white text-xs font-semibold hover:bg-red-700 whitespace-nowrap w-full sm:w-auto"
+                            disabled={user.isAdmin}
+                          >
+                            {user.isAdmin ? 'Cannot Delete Admin' : 'Delete User'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
 
@@ -1006,50 +1262,86 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex-shrink-0 min-h-screen sticky top-0">
-        <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
+      <aside
+        className={`fixed lg:sticky top-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex-shrink-0 h-screen lg:h-screen transition-transform duration-300 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
+      >
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Admin Panel</h1>
           <p className="text-xs text-gray-500 mt-1">Control Center</p>
         </div>
-        <nav className="p-2">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden text-gray-600 hover:text-gray-900"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <nav className="p-2 overflow-y-auto flex-1" style={{ maxHeight: 'calc(100vh - 180px)' }}>
           {menuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => {
                 setActiveSection(item.id);
                 setMessage({ type: '', text: '' });
+                setSidebarOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors mb-1 ${
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors mb-1 rounded ${
                 activeSection === item.id
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
-              <item.icon className={`w-5 h-5 ${activeSection === item.id ? 'text-white' : 'text-gray-600'}`} />
-              <span className="font-medium">{item.label}</span>
+              <item.icon className={`w-5 h-5 flex-shrink-0 ${activeSection === item.id ? 'text-white' : 'text-gray-600'}`} />
+              <span className="font-medium text-sm sm:text-base">{item.label}</span>
             </button>
           ))}
         </nav>
         <div className="p-4 border-t border-gray-200 mt-auto">
           <Link
             to="/"
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors rounded"
+            onClick={() => setSidebarOpen(false)}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            <span>Back to Store</span>
+            <span className="text-sm sm:text-base">Back to Store</span>
           </Link>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-x-hidden">
-        <div className="p-6">
+      <main className="flex-1 overflow-x-hidden w-full lg:w-auto">
+        {/* Mobile Header */}
+        <div className="lg:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between sticky top-0 z-30">
+          <h1 className="text-lg font-bold text-gray-900">Admin Panel</h1>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+        <div className="p-4 sm:p-6">
           {message.text && (
             <div
-              className={`rounded-lg px-4 py-3 text-sm mb-6 ${
+              className={`rounded-lg px-4 py-3 text-sm mb-4 sm:mb-6 ${
                 message.type === 'error'
                   ? 'bg-red-50 text-red-700 border border-red-200'
                   : 'bg-green-50 text-green-700 border border-green-200'
