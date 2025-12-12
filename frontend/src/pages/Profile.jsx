@@ -258,10 +258,6 @@ const Profile = () => {
                     <span className="block text-xl font-bold">{profileData?.orders?.length || 0}</span>
                     <span className="text-[10px] uppercase tracking-wide text-zinc-500">Orders</span>
                  </Link>
-                 <Link to="/wishlist" className="bg-white p-3 rounded-lg border border-gray-100 text-center hover:border-gray-300 transition-colors">
-                    <span className="block text-xl font-bold">{profileData?.wishlist?.products?.length || 0}</span>
-                    <span className="text-[10px] uppercase tracking-wide text-zinc-500">Wishlist</span>
-                 </Link>
             </div>
           </div>
 

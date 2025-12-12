@@ -16,12 +16,15 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // State for Password Visibility
   const [showPassword, setShowPassword] = useState(false);
 
-  const { login } = useAuth();
+  const { login, googleSignIn } = useAuth(); // Destructure googleSignIn
   const navigate = useNavigate();
+
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,13 +38,13 @@ const Login = () => {
     }
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
       navigate('/');
     } else {
       setError(result.message || 'Login failed. Please try again.');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -53,44 +56,64 @@ const Login = () => {
     setError('');
   };
 
-  // Consistent Input Styling
+  // --- Handlers for Social/OTP ---
+  const handleGoogleLogin = async () => {
+    try {
+      // await googleSignIn(); 
+      console.log("Google Login Triggered");
+      // navigate('/');
+    } catch (err) {
+      setError('Failed to login with Google');
+    }
+  };
+
+  const handleOTPLogin = () => {
+    console.log("OTP Login Triggered");
+    navigate('/login-otp'); // Adjust route as needed
+  };
+
+  // Consistent Input Styling (Light Theme)
   const inputClass = "block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-zinc-800 focus:border-transparent sm:text-sm transition duration-150 ease-in-out";
 
   return (
     // Fixed container to cover the entire screen (hiding Navbar/Footer)
     <div className="fixed inset-0 z-50 flex min-h-screen bg-white font-sans">
-      
-      {/* LEFT SIDE: Branding (Hidden on mobile) */}
-      <div className="hidden lg:flex flex-col justify-between w-[45%] bg-zinc-900 p-12 text-white relative overflow-hidden">
+
+      {/* LEFT SIDE: Branding with Background Image */}
+      <div
+        className="hidden lg:flex flex-col justify-between w-[45%] p-12 text-white relative overflow-hidden bg-cover bg-center"
+        style={{ backgroundImage: "url('https://res.cloudinary.com/de1bg8ivx/image/upload/v1765192160/1_08426779-951c-47b7-9feb-ef29ca85b27c_frapuz.webp')" }}
+      >
+        {/* Dark Overlay for text readability */}
+        <div className="absolute inset-0 bg-black/50 z-0"></div>
+
         {/* Abstract Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-            <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" />
-            </svg>
+        <div className="absolute inset-0 opacity-10 z-0">
+          <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" />
+          </svg>
         </div>
 
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-8">
-            <div className="h-8 w-8 bg-white rounded-md"></div>
-            <span className="text-xl font-bold tracking-wide">BRAND</span>
+            <span className="text-xl font-bold tracking-wide text-white">
+              Urban<span className='text-gray-300'>Vastra</span>
+            </span>
           </div>
-          <h1 className="text-4xl font-light leading-tight mb-4 text-gray-200">
+          <h1 className="text-4xl font-light leading-tight mb-4 text-white drop-shadow-md">
             Welcome back.
           </h1>
-          <p className="text-zinc-400 max-w-sm">
-            Sign in to access your dashboard, manage your projects, and collaborate with your team.
-          </p>
         </div>
 
-        <div className="relative z-10 text-sm text-zinc-500">
-          © 2024 Brand Inc. All rights reserved.
+        <div className="relative z-10 text-sm text-gray-300 drop-shadow-sm">
+          © 2024 UrbanVastra. All rights reserved.
         </div>
       </div>
 
       {/* RIGHT SIDE: Login Form */}
-      <div className="w-full lg:w-[55%] flex flex-col justify-center items-center p-8 lg:p-16 overflow-y-auto">
+      <div className="w-full lg:w-[55%] flex flex-col justify-center items-center p-8 lg:p-16 overflow-y-auto bg-white">
         <div className="w-full max-w-md space-y-8">
-          
+
           <div className="text-center lg:text-left">
             <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Sign in</h2>
             <p className="mt-2 text-sm text-gray-600">
@@ -109,7 +132,7 @@ const Login = () => {
             )}
 
             <div className="space-y-5">
-              
+
               {/* Email Input */}
               <div className="relative">
                 <label htmlFor="email" className="sr-only">Email address</label>
@@ -147,10 +170,10 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`${inputClass} pr-10`} // Extra padding right for the eye icon
+                  className={`${inputClass} pr-10`}
                   placeholder="Password"
                 />
-                
+
                 {/* Show/Hide Button */}
                 <button
                   type="button"
@@ -158,12 +181,10 @@ const Login = () => {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
                 >
                   {showPassword ? (
-                    // Eye Slash
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                     </svg>
                   ) : (
-                    // Eye
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -216,6 +237,62 @@ const Login = () => {
               </button>
             </div>
           </form>
+
+          {/* DIVIDER */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          {/* SOCIAL BUTTONS GRID */}
+          <div className="grid grid-cols-2 gap-3">
+
+            {/* GOOGLE BUTTON (White BG, Gray Border) */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <path
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  fill="#4285F4"
+                />
+                <path
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  fill="#34A853"
+                />
+                <path
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  fill="#FBBC05"
+                />
+                <path
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  fill="#EA4335"
+                />
+              </svg>
+              <span className="sr-only sm:not-sr-only">Google</span>
+            </button>
+
+            {/* OTP / MOBILE BUTTON (White BG, Gray Border) */}
+            <button
+              type="button"
+              onClick={handleOTPLogin}
+              className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200"
+            >
+              <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+              <span>Login by OTP</span>
+            </button>
+
+          </div>
+
+          {/*Login in*/}
 
           <div className="mt-6 text-center">
             <Link to="/" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">

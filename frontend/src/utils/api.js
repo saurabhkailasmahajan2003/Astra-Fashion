@@ -81,26 +81,6 @@ export const cartAPI = {
   },
 };
 
-// Wishlist API calls
-export const wishlistAPI = {
-  getWishlist: async () => {
-    return apiRequest('/wishlist');
-  },
-
-  addToWishlist: async (product) => {
-    return apiRequest('/wishlist/add', {
-      method: 'POST',
-      body: JSON.stringify({ product }),
-    });
-  },
-
-  removeFromWishlist: async (productId) => {
-    return apiRequest(`/wishlist/remove/${productId}`, {
-      method: 'DELETE',
-    });
-  },
-};
-
 // Order API calls
 export const orderAPI = {
   getOrders: async () => {
@@ -261,6 +241,26 @@ export const adminAPI = {
   deleteProduct: async (id, category) => {
     const query = category ? `?category=${encodeURIComponent(category)}` : '';
     return apiRequest(`/admin/products/${id}${query}`, { method: 'DELETE' });
+  },
+};
+
+// Review API calls
+export const reviewAPI = {
+  getReviews: async (productId, sort = 'newest', limit = 50) => {
+    return apiRequest(`/reviews/${productId}?sort=${sort}&limit=${limit}`);
+  },
+
+  createReview: async (reviewData) => {
+    return apiRequest('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(reviewData),
+    });
+  },
+
+  markHelpful: async (reviewId) => {
+    return apiRequest(`/reviews/${reviewId}/helpful`, {
+      method: 'PUT',
+    });
   },
 };
 

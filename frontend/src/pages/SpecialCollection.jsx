@@ -209,8 +209,8 @@ const SpecialCollection = ({ type }) => {
               showMobileFilters ? 'block' : 'hidden'
             } lg:block w-full lg:w-1/4 flex-shrink-0 ${
               showMobileFilters
-                ? 'fixed inset-0 z-50 bg-white p-4 overflow-y-auto lg:relative lg:z-auto lg:bg-transparent lg:p-0'
-                : ''
+                ? 'fixed inset-0 z-50 bg-white p-4 overflow-y-auto lg:relative lg:z-auto lg:bg-transparent lg:p-0 lg:-ml-8'
+                : 'lg:-ml-8'
             }`}
           >
             {showMobileFilters && (

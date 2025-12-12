@@ -1,7 +1,6 @@
 import express from 'express';
 import User from '../models/User.js';
 import Cart from '../models/Cart.js';
-import Wishlist from '../models/Wishlist.js';
 import Order from '../models/Order.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -18,12 +17,6 @@ router.get('/', protect, async (req, res) => {
       cart = await Cart.create({ user: req.user._id, items: [] });
     }
 
-    // Get wishlist
-    let wishlist = await Wishlist.findOne({ user: req.user._id });
-    if (!wishlist) {
-      wishlist = await Wishlist.create({ user: req.user._id, products: [] });
-    }
-
     // Get orders
     const orders = await Order.find({ user: req.user._id })
       .sort({ orderDate: -1 });
@@ -33,7 +26,6 @@ router.get('/', protect, async (req, res) => {
       data: {
         user,
         cart,
-        wishlist,
         orders,
       },
     });

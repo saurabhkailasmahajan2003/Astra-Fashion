@@ -132,6 +132,14 @@ const Cart = () => {
                   const product = item.product || item;
                   const itemId = item._id || item.id;
                   
+                  // Normalize image - handle both images array and single image
+                  const productImage = product.images?.length 
+                    ? product.images[0] 
+                    : product.image || product.thumbnail || '';
+                  
+                  // Normalize price
+                  const productPrice = product.finalPrice || product.price || 0;
+                  
                   return (
                     <div key={itemId} className="p-6 sm:p-8 hover:bg-gray-50/50 transition-colors duration-200">
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
@@ -140,20 +148,20 @@ const Cart = () => {
                         <div className="sm:col-span-6 flex gap-6">
                           <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 group">
                             <img
-                              src={product.image}
-                              alt={product.name}
+                              src={productImage}
+                              alt={product.name || 'Product'}
                               className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                               onError={(e) => handleImageError(e, 200, 200)}
                             />
                           </div>
                           <div className="flex flex-col justify-center">
                             <h3 className="text-base font-semibold text-gray-900">
-                                <Link to={`/product/${itemId}`} className="hover:text-gray-600 transition-colors">
-                                    {product.name}
+                                <Link to={`/product/${product.category || 'shop'}/${itemId}`} className="hover:text-gray-600 transition-colors">
+                                    {product.name || 'Product'}
                                 </Link>
                             </h3>
                             <p className="mt-1 text-sm text-gray-500">{product.brand || 'Premium Brand'}</p>
-                            <p className="mt-1 text-sm font-medium text-gray-900">₹{product.price.toLocaleString()}</p>
+                            <p className="mt-1 text-sm font-medium text-gray-900">₹{productPrice.toLocaleString()}</p>
                             {/* Mobile Only Remove */}
                             <button 
                                 onClick={() => removeFromCart(itemId)}
@@ -188,7 +196,7 @@ const Cart = () => {
                         <div className="sm:col-span-3 flex flex-row sm:flex-col justify-between sm:justify-center items-center sm:items-end">
                             <span className="text-sm sm:hidden font-medium text-gray-500">Total:</span>
                             <div className="text-right">
-                                <p className="text-lg font-bold text-gray-900">₹{(product.price * item.quantity).toLocaleString()}</p>
+                                <p className="text-lg font-bold text-gray-900">₹{(productPrice * item.quantity).toLocaleString()}</p>
                                 <button 
                                     onClick={() => removeFromCart(itemId)}
                                     className="hidden sm:flex items-center justify-end mt-2 text-xs text-gray-400 hover:text-red-600 transition-colors"

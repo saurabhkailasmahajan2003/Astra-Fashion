@@ -2,15 +2,18 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { paymentAPI } from '../utils/api';
+import { paymentAPI, profileAPI } from '../utils/api';
 import { loadScript } from '../utils/razorpay';
+import { Check } from 'lucide-react';
 
 const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
   const [error, setError] = useState('');
+  const [addressSaved, setAddressSaved] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -30,11 +33,84 @@ const Checkout = () => {
       navigate('/cart');
       return;
     }
+    
+    // Load user profile to get saved address
+    const loadUserProfile = async () => {
+      try {
+        const response = await profileAPI.getProfile();
+        if (response.success && response.data.user) {
+          const userData = response.data.user;
+          // Update shipping address with saved address if available
+          if (userData.address) {
+            setShippingAddress({
+              name: userData.address.name || userData.name || '',
+              phone: userData.address.phone || userData.phone || '',
+              address: userData.address.address || '',
+              city: userData.address.city || '',
+              state: userData.address.state || '',
+              zipCode: userData.address.zipCode || '',
+              country: userData.address.country || 'India',
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      }
+    };
+    
+    loadUserProfile();
   }, [isAuthenticated, cart.length, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setShippingAddress((prev) => ({ ...prev, [name]: value }));
+    // Reset saved status when user edits
+    if (addressSaved) {
+      setAddressSaved(false);
+    }
+  };
+
+  const saveAddress = async () => {
+    if (!shippingAddress.name || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
+      setError('Please fill in all required fields before saving');
+      return;
+    }
+
+    setSavingAddress(true);
+    setError('');
+
+    try {
+      const addressData = {
+        name: shippingAddress.name,
+        phone: shippingAddress.phone,
+        address: {
+          name: shippingAddress.name,
+          phone: shippingAddress.phone,
+          address: shippingAddress.address,
+          city: shippingAddress.city,
+          state: shippingAddress.state || '',
+          zipCode: shippingAddress.zipCode || '',
+          country: shippingAddress.country || 'India',
+        },
+      };
+
+      const response = await profileAPI.updateProfile(addressData);
+      if (response.success) {
+        setAddressSaved(true);
+        setTimeout(() => setAddressSaved(false), 3000);
+        // Update user in AuthContext if available
+        if (response.data?.user) {
+          // The user data will be refreshed on next profile load
+        }
+      } else {
+        setError('Failed to save address. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error saving address:', err);
+      setError('Failed to save address. Please try again.');
+    } finally {
+      setSavingAddress(false);
+    }
   };
 
   const handlePayment = async () => {
@@ -47,6 +123,27 @@ const Checkout = () => {
     setError('');
 
     try {
+      // Save address automatically before proceeding to payment
+      try {
+        const addressData = {
+          name: shippingAddress.name,
+          phone: shippingAddress.phone,
+          address: {
+            name: shippingAddress.name,
+            phone: shippingAddress.phone,
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            state: shippingAddress.state || '',
+            zipCode: shippingAddress.zipCode || '',
+            country: shippingAddress.country || 'India',
+          },
+        };
+        await profileAPI.updateProfile(addressData);
+      } catch (saveErr) {
+        console.error('Error auto-saving address:', saveErr);
+        // Continue with payment even if address save fails
+      }
+
       // Load Razorpay script
       const scriptLoaded = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
       
@@ -146,7 +243,15 @@ const Checkout = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Shipping Address Form */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Shipping Address</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Shipping Address</h2>
+              {addressSaved && (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <Check size={16} />
+                  <span>Saved</span>
+                </div>
+              )}
+            </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -233,6 +338,34 @@ const Checkout = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                   />
                 </div>
+              </div>
+              
+              {/* Save Address Button */}
+              <div className="pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={saveAddress}
+                  disabled={savingAddress || !shippingAddress.name || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city}
+                  className="w-full px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {savingAddress ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} />
+                      Save Address
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Address will be automatically saved when you proceed to payment
+                </p>
               </div>
             </div>
           </div>

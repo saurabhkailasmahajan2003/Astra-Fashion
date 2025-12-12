@@ -45,20 +45,35 @@ router.post('/add', protect, async (req, res) => {
       cart = await Cart.create({ user: req.user._id, items: [] });
     }
 
-    // Check if product already exists in cart
-    const existingItemIndex = cart.items.findIndex(
-      (item) =>
-        item.product.id === product.id &&
+    // Normalize product data to ensure images are preserved
+    const normalizedProduct = {
+      ...product,
+      // Ensure we have both image and images for compatibility
+      image: product.images?.length ? product.images[0] : product.image || product.thumbnail || '',
+      images: product.images || (product.image ? [product.image] : []),
+      // Normalize price fields
+      price: product.finalPrice || product.price || 0,
+      finalPrice: product.finalPrice || product.price || 0,
+    };
+
+    // Check if product already exists in cart (check both id and _id)
+    const productId = normalizedProduct._id || normalizedProduct.id;
+    const existingItemIndex = cart.items.findIndex((item) => {
+      const itemProductId = item.product._id || item.product.id;
+      return (
+        itemProductId && productId && 
+        String(itemProductId) === String(productId) &&
         item.size === size &&
         item.color === color
-    );
+      );
+    });
 
     if (existingItemIndex > -1) {
       // Update quantity
       cart.items[existingItemIndex].quantity += quantity;
     } else {
-      // Add new item
-      cart.items.push({ product, quantity, size, color });
+      // Add new item with normalized product
+      cart.items.push({ product: normalizedProduct, quantity, size, color });
     }
 
     await cart.save();

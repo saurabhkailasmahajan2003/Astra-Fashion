@@ -49,9 +49,6 @@ const Footer = () => {
               <li>
                 <Link to="/cart" className="hover:text-white transition">Shopping Cart</Link>
               </li>
-              <li>
-                <Link to="/wishlist" className="hover:text-white transition">Wishlist</Link>
-              </li>
             </ul>
           </div>
 

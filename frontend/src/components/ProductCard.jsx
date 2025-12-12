@@ -1,14 +1,12 @@
 import { useState, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import LoginModal from './LoginModal';
 import { handleImageError } from '../utils/imageFallback';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
   
   const [isHovered, setIsHovered] = useState(false);
@@ -51,13 +49,6 @@ const ProductCard = ({ product }) => {
     }
   };
 
-  const handleWishlist = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isAuthenticated) return setShowLoginModal(true);
-    
-    isInWishlist(productId) ? await removeFromWishlist(productId) : await addToWishlist(product);
-  };
 
   return (
     <>
@@ -79,20 +70,6 @@ const ProductCard = ({ product }) => {
           {/* IMAGE AREA */}
           <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm">
             
-            {/* Wishlist Button */}
-            <button
-              onClick={handleWishlist}
-              className="absolute top-2 right-2 z-20 p-2 rounded-full bg-white/60 backdrop-blur-md hover:bg-white text-gray-800 transition-all duration-300 active:scale-90"
-            >
-              <svg 
-                className={`w-5 h-5 ${isInWishlist(productId) ? 'fill-red-500 text-red-500' : 'fill-none'}`}
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                strokeWidth="1.5"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            </button>
 
             {/* Discount Tag */}
             {hasDiscount && (

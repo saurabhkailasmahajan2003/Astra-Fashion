@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 
 // --- DATA CONFIGURATION (Moved outside component for performance) ---
@@ -63,7 +62,6 @@ const NAV_LINKS = [
 const Navbar = () => {
   // Context
   const { getCartItemsCount } = useCart();
-  const { getWishlistCount } = useWishlist();
   const { isAuthenticated, user, logout } = useAuth();
   
   // Router
@@ -151,13 +149,13 @@ const Navbar = () => {
       </div>
 
       {/* =======================
-          MAIN NAVBAR
-      ======================== */}
+               MAIN NAVBAR
+          ======================= */}
       <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 mt-7 border-b py-3
+        className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 border-b py-3
         ${isScrolled 
-          ? 'bg-white border-gray-500 shadow-sm rounded-2xl mx-4 mt-0 transition-all duration-400 py-1' 
-          : 'bg-white border-gray-400 transition-all duration-1000 py-1'}`}
+          ? 'bg-white border-gray-500 shadow-sm' 
+          : 'bg-white border-gray-400'}`}
       >
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex items-center justify-between h-12">
@@ -182,7 +180,7 @@ const Navbar = () => {
             {/* CENTER: Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
               <Link 
-                to="/" 
+                to="/"
                 className={`text-xs font-bold uppercase tracking-[0.15em] hover:text-black transition-all relative group
                 ${activeCategory === 'home' ? 'text-black' : 'text-gray-500'}`}
               >
@@ -272,13 +270,6 @@ const Navbar = () => {
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               </button>
 
-              {/* Wishlist */}
-              <Link to="/wishlist" className="hidden md:block p-2 text-gray-800 hover:bg-gray-100 rounded-full transition-colors relative group">
-                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                 {getWishlistCount() > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>}
-                 {/* Tooltip */}
-                 <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-black text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Wishlist</span>
-              </Link>
 
               {/* Account */}
               <div className="hidden md:block">
@@ -323,9 +314,6 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-      
-      {/* Spacer */}
-      <div className={`transition-all duration-300 ${isSearchOpen ? 'h-32' : 'h-16 md:h-20'} w-full`}></div>
 
 
       {/* =======================
@@ -342,10 +330,6 @@ const Navbar = () => {
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" /></svg>
            </button>
 
-           <Link to="/wishlist" className="p-3 rounded-xl text-gray-500 relative">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-              {getWishlistCount() > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>}
-           </Link>
 
            <Link to={isAuthenticated ? "/profile" : "/login"} className="p-3 rounded-xl text-gray-500">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
