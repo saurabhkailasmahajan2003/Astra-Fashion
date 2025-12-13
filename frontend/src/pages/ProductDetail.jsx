@@ -690,141 +690,160 @@ const ProductDetail = () => {
             </div>
 
             {/* RIGHT COLUMN: Product Information */}
-            <div className="flex flex-col space-y-6 order-last lg:order-last">
+            <div className="flex flex-col space-y-6 lg:space-y-8 order-last lg:order-last">
               
-              {/* Product Title with Highlighted Words */}
-                  <div>
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex-1">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                      {nameWords.map((word, idx) => {
-                        const shouldHighlight = highlightWords.some(hw => word.toLowerCase().includes(hw.toLowerCase()));
-                        return (
-                          <span key={idx} className="inline-block mr-2">
-                            {shouldHighlight ? (
-                              <span className="relative inline-block">
-                                <span className="relative z-10">
-                                  {word}
-                  </span>
-                                <span className="absolute inset-0 bg-gray-200/40 rounded-lg blur-sm transform -rotate-1 -z-0"></span>
-                  </span>
-                            ) : (
-                              <span>{word}</span>
+              {/* Product Title & Brand */}
+              <div className="space-y-3">
+                {product.brand && (
+                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                    {product.brand}
+                  </div>
                 )}
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+                  {nameWords.map((word, idx) => {
+                    const shouldHighlight = highlightWords.some(hw => word.toLowerCase().includes(hw.toLowerCase()));
+                    return (
+                      <span key={idx} className="inline-block mr-2">
+                        {shouldHighlight ? (
+                          <span className="relative inline-block">
+                            <span className="relative z-10">{word}</span>
+                            <span className="absolute inset-0 bg-gray-200/40 rounded-lg blur-sm transform -rotate-1 -z-0"></span>
                           </span>
-                        );
-                      })}
-                    </h1>
-                  </div>
-
-              </div>
-            </div>
-
-              {/* Price and Action Buttons */}
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-gray-900">₹{finalPrice.toLocaleString()}</span>
-                  {originalPrice > finalPrice && (
-                    <span className="text-base text-gray-400 line-through">₹{originalPrice.toLocaleString()}</span>
-                  )}
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button 
-                    onClick={handleAddToCart}
-                    className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap text-sm"
-                  >
-                    <span>add to cart</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={handleBuyNow}
-                    className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 font-semibold px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-95 whitespace-nowrap text-sm border-2 border-gray-900"
-                  >
-                    <span>buy now</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </button>
-                </div>
-                </div>
-
-              {/* Product Reviews */}
-              
-
-              
-
-              {/* Product Information Sections - Always Visible */}
-              <div className="border-t border-gray-200 pt-4 mt-auto space-y-6">
-                {/* Details Section */}
-                <div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-3">details</h3>
-                  <div className="text-sm text-gray-600 leading-relaxed">
-                    <p className="mb-3">{product.description || product.productDetails?.description || 'Product details coming soon...'}</p>
-                    <div className="space-y-2">
-                      {product.productDetails?.fabric && (
-                        <p><span className="font-medium text-gray-900">Fabric:</span> {product.productDetails.fabric}</p>
-                      )}
-                      {product.brand && (
-                        <p><span className="font-medium text-gray-900 text-xl">Brand:</span> {product.brand}</p>
-                      )}
-                  </div>
-                  </div>
-                </div>
-
-                {/* Reviews Section */}
-                <div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-3">reviews</h3>
-                  <div className="text-sm text-gray-600 ml-10">
-                    {loadingReviews ? (
-                      <div className="space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                      </div>
-                    ) : reviews.length > 0 ? (
-                      <div className="space-y-4">
-                        {/* Rating Distribution Bars */}
-                        {reviewStats && reviewStats.ratingDistribution && (
-                          <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
-                            {[5, 4, 3, 2, 1].map((rating) => {
-                              const count = reviewStats.ratingDistribution[rating] || 0;
-                              const percentage = reviewStats.totalReviews > 0
-                                ? (count / reviewStats.totalReviews) * 100
-                                : 0;
-                              return (
-                                <div key={rating} className="flex items-center gap-3">
-                                  <div className="text-xs font-medium text-gray-700 w-8 flex-shrink-0">
-                                    {rating} ★
-                                  </div>
-                                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden min-w-0">
-                                    <div
-                                      className="h-full bg-yellow-400 transition-all duration-300"
-                                      style={{ width: `${percentage}%` }}
-                                    />
-                                  </div>
-                                  <div className="text-xs text-gray-500 w-6 text-right flex-shrink-0">
-                                    {count}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                        ) : (
+                          <span>{word}</span>
                         )}
-                        
-                        {/* Reviews List */}
-                        <div className="space-y-3">
-                          {reviews.slice(0, 3).map((review) => (
-                            <div key={review._id} className="border-b border-gray-100 pb-3 last:border-0">
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <div className="font-medium text-gray-900 text-sm">
-                                  {review.userName || 'Anonymous'}
+                      </span>
+                    );
+                  })}
+                </h1>
+              </div>
+
+              {/* Price Section */}
+              <div className="flex items-baseline gap-3 pb-4 border-b border-gray-200">
+                <span className="text-3xl lg:text-4xl font-bold text-gray-900">₹{finalPrice.toLocaleString()}</span>
+                {originalPrice > finalPrice && (
+                  <>
+                    <span className="text-lg text-gray-400 line-through">₹{originalPrice.toLocaleString()}</span>
+                    <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
+                      {Math.round(((originalPrice - finalPrice) / originalPrice) * 100)}% OFF
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-row gap-3">
+                <button 
+                  onClick={handleAddToCart}
+                  className="flex-1 flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold px-6 py-3.5 rounded-lg transition-all shadow-lg hover:shadow-xl active:scale-[0.98] text-base"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span>Add to Cart</span>
+                </button>
+                <button
+                  onClick={handleBuyNow}
+                  className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-900 font-semibold px-6 py-3.5 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-[0.98] text-base border-2 border-gray-900"
+                >
+                  <span>Buy Now</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Quick Info Cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-xs font-semibold text-gray-700 uppercase">Free Shipping</span>
+                  </div>
+                  <p className="text-xs text-gray-600">On orders over ₹1,000</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span className="text-xs font-semibold text-gray-700 uppercase">Easy Returns</span>
+                  </div>
+                  <p className="text-xs text-gray-600">30 days return policy</p>
+                </div>
+              </div>
+
+              {/* Reviews Summary */}
+              {reviewStats && reviewStats.averageRating && (
+                <div className="bg-white border border-gray-200 rounded-lg p-5">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-gray-900">{reviewStats.averageRating.toFixed(1)}</div>
+                      <div className="flex items-center gap-0.5 mt-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg
+                            key={star}
+                            className={`w-4 h-4 ${
+                              star <= Math.round(reviewStats.averageRating)
+                                ? 'text-yellow-400 fill-current'
+                                : 'text-gray-300'
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600 mb-2">
+                        Based on <span className="font-semibold text-gray-900">{reviewStats.totalReviews}</span> reviews
+                      </p>
+                      {reviewStats.ratingDistribution && (
+                        <div className="space-y-1.5">
+                          {[5, 4, 3, 2, 1].slice(0, 3).map((rating) => {
+                            const count = reviewStats.ratingDistribution[rating] || 0;
+                            const percentage = reviewStats.totalReviews > 0
+                              ? (count / reviewStats.totalReviews) * 100
+                              : 0;
+                            return (
+                              <div key={rating} className="flex items-center gap-2">
+                                <span className="text-xs text-gray-600 w-6">{rating}★</span>
+                                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-yellow-400 transition-all duration-300"
+                                    style={{ width: `${percentage}%` }}
+                                  />
                                 </div>
+                                <span className="text-xs text-gray-500 w-8 text-right">{count}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {reviews.length > 0 && (
+                    <div className="pt-4 border-t border-gray-200">
+                      <div className="space-y-3">
+                        {reviews.slice(0, 2).map((review) => (
+                          <div key={review._id} className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-semibold text-gray-600">
+                                {(review.userName || 'A')[0].toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium text-gray-900">{review.userName || 'Anonymous'}</span>
                                 <div className="flex items-center gap-0.5">
                                   {[1, 2, 3, 4, 5].map((star) => (
                                     <svg
                                       key={star}
-                                      className={`w-4 h-4 ${
+                                      className={`w-3 h-3 ${
                                         star <= review.rating
                                           ? 'text-yellow-400 fill-current'
                                           : 'text-gray-300'
@@ -837,36 +856,76 @@ const ProductDetail = () => {
                                   ))}
                                 </div>
                               </div>
-                              <p className="font-medium text-gray-900 mb-1 text-sm">{review.title}</p>
-                              <p className="text-gray-600 line-clamp-2 text-sm">{review.comment}</p>
+                              <p className="text-sm font-medium text-gray-900 mb-1 line-clamp-1">{review.title}</p>
+                              <p className="text-xs text-gray-600 line-clamp-2">{review.comment}</p>
                             </div>
-                          ))}
-                          {reviews.length > 3 && (
-                            <p className="text-gray-500 text-xs">+ {reviews.length - 3} more reviews</p>
-                          )}
-                        </div>
+                          </div>
+                        ))}
                       </div>
-                    ) : (
-                      <p className="text-gray-500">No reviews yet.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Product Details */}
+              <div className="bg-white border border-gray-200 rounded-lg p-5">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Details</h3>
+                <div className="space-y-3 text-sm text-gray-600">
+                  <p className="leading-relaxed">
+                    {product.description || product.productDetails?.description || 'Premium quality product designed for comfort and style.'}
+                  </p>
+                  <div className="pt-3 border-t border-gray-100 space-y-2">
+                    {product.brand && (
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-900">Brand:</span>
+                        <span>{product.brand}</span>
+                      </div>
                     )}
+                    {product.productDetails?.fabric && (
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-900">Fabric:</span>
+                        <span>{product.productDetails.fabric}</span>
+                      </div>
+                    )}
+                    {product.color && (
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-900">Color:</span>
+                        <span className="capitalize">{product.color}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-                {/* Delivery Section */}
-                  <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">delivery</h3>
-                  <div className="text-sm text-gray-600 space-y-2.5">
-                    <div className="flex items-start gap-2.5">
-                      <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <p>Free delivery on orders over ₹499</p>
+              {/* Delivery & Returns Info */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping & Returns</h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <div>
+                      <p className="font-medium text-gray-900">Free Shipping</p>
+                      <p className="text-gray-600">On orders over ₹1,000. Standard delivery in 5-7 business days.</p>
                     </div>
-                    <div className="flex items-start gap-2.5">
-                      <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      <p>30 Days Easy Returns</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <div>
+                      <p className="font-medium text-gray-900">30-Day Returns</p>
+                      <p className="text-gray-600">Easy returns within 30 days of purchase. No questions asked.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <div>
+                      <p className="font-medium text-gray-900">Secure Payment</p>
+                      <p className="text-gray-600">Your payment information is safe and encrypted.</p>
                     </div>
                   </div>
                 </div>

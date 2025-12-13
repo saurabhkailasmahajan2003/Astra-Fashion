@@ -103,7 +103,7 @@ const scroll = (direction) => {
 
 // --- NEWS TICKER COMPONENT (New) ---
 const NewsTicker = () => {
-  const marqueeContent = "⚡ FREE SHIPPING ON ALL ORDERS OVER ₹999 ⚡ | ✨ NEW SEASON STYLES ADDED DAILY ✨ | 🎁 LIMITED TIME DISCOUNTS ON WATCHES 🎁 | 🛍️ JOIN OUR LOYALTY PROGRAM 🛍️";
+  const marqueeContent = "⚡ FREE SHIPPING ON ALL ORDERS OVER ₹1,000 ⚡ | ✨ NEW SEASON STYLES ADDED DAILY ✨ | 🎁 LIMITED TIME DISCOUNTS ON WATCHES 🎁 | 🛍️ JOIN OUR LOYALTY PROGRAM 🛍️";
 
   // NOTE: For the 'continuous' marquee animation, this CSS needs to be applied.
   // In a real project, place this CSS in your global stylesheet (e.g., index.css).
@@ -605,10 +605,6 @@ const Home = () => {
         bgColor="bg-gradient-to-br from-gray-50 to-white"
         isLoading={isLoading}
       /> */}
-
-
-
-
 
       {/* 3. Men & Women - Grid Layout */}
       <div className="max-w-7xl mx-auto px-4 py-12">

@@ -57,22 +57,22 @@ const Footer = () => {
             <h3 className="text-white text-lg font-semibold mb-4">Customer Service</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="hover:text-white transition">Contact Us</a>
+                <Link to="/contact" className="hover:text-white transition">Contact Us</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition">FAQ</a>
+                <Link to="/faq" className="hover:text-white transition">FAQ</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition">Shipping Info</a>
+                <Link to="/shipping" className="hover:text-white transition">Shipping Info</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition">Returns</a>
+                <Link to="/returns" className="hover:text-white transition">Returns</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition">Track Order</a>
+                <Link to="/track-order" className="hover:text-white transition">Track Order</Link>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition">Size Guide</a>
+                <Link to="/size-guide" className="hover:text-white transition">Size Guide</Link>
               </li>
             </ul>
           </div>
@@ -111,9 +111,9 @@ const Footer = () => {
               © 2024 ShopHub. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-white transition">Privacy Policy</a>
-              <a href="#" className="text-gray-400 hover:text-white transition">Terms of Service</a>
-              <a href="#" className="text-gray-400 hover:text-white transition">Cookie Policy</a>
+              <Link to="/privacy-policy" className="text-gray-400 hover:text-white transition">Privacy Policy</Link>
+              <Link to="/terms-of-service" className="text-gray-400 hover:text-white transition">Terms of Service</Link>
+              <Link to="/cookie-policy" className="text-gray-400 hover:text-white transition">Cookie Policy</Link>
             </div>
           </div>
         </div>

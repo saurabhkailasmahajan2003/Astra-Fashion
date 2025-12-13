@@ -13,6 +13,16 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
+import ContactUs from './pages/ContactUs';
+import FAQ from './pages/FAQ';
+import ShippingInfo from './pages/ShippingInfo';
+import Returns from './pages/Returns';
+import TrackOrder from './pages/TrackOrder';
+import SizeGuide from './pages/SizeGuide';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import CookiePolicy from './pages/CookiePolicy';
+import CookieConsent from './components/CookieConsent';
 
 function AppContent() {
   const location = useLocation();
@@ -41,9 +51,19 @@ function AppContent() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/shipping" element={<ShippingInfo />} />
+          <Route path="/returns" element={<Returns />} />
+          <Route path="/track-order" element={<TrackOrder />} />
+          <Route path="/size-guide" element={<SizeGuide />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/cookie-policy" element={<CookiePolicy />} />
         </Routes>
       </main>
       {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <CookieConsent />}
     </div>
   );
 }

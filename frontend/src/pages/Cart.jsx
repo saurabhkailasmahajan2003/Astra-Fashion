@@ -40,7 +40,7 @@ const Cart = () => {
   
   // Simulated Free Shipping Threshold logic
   const cartTotal = getCartTotal();
-  const freeShippingThreshold = 15000; 
+  const freeShippingThreshold = 1000; 
   const progress = Math.min((cartTotal / freeShippingThreshold) * 100, 100);
   const remainingForFreeShip = freeShippingThreshold - cartTotal;
 
@@ -275,7 +275,7 @@ const Cart = () => {
                   Checkout
                 </button>
                 <p className="mt-4 text-center text-xs text-gray-500">
-                    Free shipping on orders over ₹15,000
+                    Free shipping on orders over ₹1,000
                 </p>
               </div>
 

@@ -386,7 +386,7 @@ const CategoryPage = () => {
                <div className="lg:hidden mb-4 space-y-2">
                  <p className="text-xs uppercase tracking-wide text-gray-500">Subcategories</p>
                  <div className="flex flex-wrap gap-2">
-                   {['shirt', 'tshirt', 'jeans', 'trousers', 'shoes', 'accessories'].map((sub) => (
+                   {['shirt', 'tshirt', 'trousers', 'shoes', 'accessories'].map((sub) => (
                      <Link
                        key={sub}
                        to={`/${derivedGender}/${sub}`}

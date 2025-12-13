@@ -12,7 +12,6 @@ const NAV_LINKS = [
     subItems: [
       { name: 'Shirts', path: '/men/shirt' },
       { name: 'T-Shirts', path: '/men/tshirt' },
-      { name: 'Jeans', path: '/men/jeans' },
       { name: 'Trousers', path: '/men/trousers' },
       { name: 'Shoes', path: '/men/shoes' },
     ] 
@@ -146,7 +145,7 @@ const Navbar = () => {
           TOP ANNOUNCEMENT BAR
       ======================== */}
       <div className="bg-black text-white text-[10px] md:text-xs font-bold tracking-widest text-center uppercase py-2">
-        Free Shipping on Orders Over 10000 - Returns within 30 Days
+        Free Shipping on Orders Over ₹1,000 - Returns within 30 Days
       </div>
 
       {/* =======================
@@ -158,8 +157,8 @@ const Navbar = () => {
           ? 'bg-white border-gray-500 shadow-sm' 
           : 'bg-white border-gray-400'}`}
       >
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
-          <div className="flex items-center justify-between h-12">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-1">
+          <div className="flex items-center justify-between h-12 py-1">
 
             {/* LEFT: Logo & Mobile Toggle */}
             <div className="flex items-center gap-4">
