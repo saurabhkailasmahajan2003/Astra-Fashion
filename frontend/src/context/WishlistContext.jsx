@@ -23,6 +23,7 @@ const saveLocalWishlist = (ids) => {
 };
 
 const WishlistContext = createContext();
+const WISHLIST_API_DISABLED_KEY = 'wishlist_api_disabled';
 
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
@@ -37,6 +38,14 @@ export const WishlistProvider = ({ children }) => {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(false);
   const [wishlistIds, setWishlistIds] = useState(new Set());
+  const [wishlistApiAvailable, setWishlistApiAvailable] = useState(() => {
+    try {
+      const stored = localStorage.getItem(WISHLIST_API_DISABLED_KEY);
+      return stored === 'true' ? false : true;
+    } catch {
+      return true;
+    }
+  });
 
   // Load wishlist when user is authenticated
   useEffect(() => {
@@ -48,8 +57,20 @@ export const WishlistProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
+  const setLocalWishlistState = (ids) => {
+    const uniqueIds = Array.from(new Set(ids));
+    setWishlistIds(new Set(uniqueIds));
+    setWishlist(uniqueIds.map(id => ({ productId: id })));
+    saveLocalWishlist(uniqueIds);
+  };
+
   const loadWishlist = async () => {
     if (!isAuthenticated) return;
+    if (!wishlistApiAvailable) {
+      const localIds = getLocalWishlist();
+      setLocalWishlistState(localIds);
+      return;
+    }
     
     setLoading(true);
     try {
@@ -62,9 +83,10 @@ export const WishlistProvider = ({ children }) => {
       }
     } catch (error) {
       // Silently fall back to local storage when API route is missing
+      setWishlistApiAvailable(false);
+      try { localStorage.setItem(WISHLIST_API_DISABLED_KEY, 'true'); } catch {}
       const localIds = getLocalWishlist();
-      setWishlistIds(new Set(localIds));
-      setWishlist(localIds.map(id => ({ productId: id })));
+      setLocalWishlistState(localIds);
     } finally {
       setLoading(false);
     }
@@ -76,6 +98,11 @@ export const WishlistProvider = ({ children }) => {
     }
 
     try {
+      if (!wishlistApiAvailable) {
+        setLocalWishlistState([...wishlistIds, productId]);
+        return true;
+      }
+
       const response = await wishlistAPI.addToWishlist(productId);
       if (response.success) {
         setWishlistIds(prev => new Set([...prev, productId]));
@@ -86,17 +113,9 @@ export const WishlistProvider = ({ children }) => {
     } catch (error) {
       console.error('Error adding to wishlist:', error);
       // Fallback to local storage if API is not available
-      setWishlistIds(prev => {
-        const next = new Set(prev);
-        next.add(productId);
-        saveLocalWishlist([...next]);
-        return next;
-      });
-      setWishlist(prev => {
-        const exists = prev.some(item => (item.productId || item.product?._id || item.product?.id) === productId);
-        if (exists) return prev;
-        return [...prev, { productId }];
-      });
+      setWishlistApiAvailable(false);
+      try { localStorage.setItem(WISHLIST_API_DISABLED_KEY, 'true'); } catch {}
+      setLocalWishlistState([...wishlistIds, productId]);
       return true;
     }
   };
@@ -105,31 +124,24 @@ export const WishlistProvider = ({ children }) => {
     if (!isAuthenticated) return false;
 
     try {
+      if (!wishlistApiAvailable) {
+        setLocalWishlistState([...wishlistIds].filter(id => id !== productId));
+        return true;
+      }
+
       const response = await wishlistAPI.removeFromWishlist(productId);
       if (response.success) {
-        setWishlistIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(productId);
-          return newSet;
-        });
-        setWishlist(prev => prev.filter(item => 
-          (item.productId || item.product?._id || item.product?.id) !== productId
-        ));
+        const updated = [...wishlistIds].filter(id => id !== productId);
+        setLocalWishlistState(updated);
         return true;
       }
       return false;
     } catch (error) {
       console.error('Error removing from wishlist:', error);
       // Fallback to local storage if API is not available
-      setWishlistIds(prev => {
-        const next = new Set(prev);
-        next.delete(productId);
-        saveLocalWishlist([...next]);
-        return next;
-      });
-      setWishlist(prev => prev.filter(item => 
-        (item.productId || item.product?._id || item.product?.id) !== productId
-      ));
+      setWishlistApiAvailable(false);
+      try { localStorage.setItem(WISHLIST_API_DISABLED_KEY, 'true'); } catch {}
+      setLocalWishlistState([...wishlistIds].filter(id => id !== productId));
       return true;
     }
   };

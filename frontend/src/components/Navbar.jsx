@@ -180,26 +180,11 @@ const Navbar = () => {
             {/* LEFT: Logo */}
             <div className="flex items-center gap-4">
               <Link to="/" className="flex-shrink-0 group relative z-10">
-                 {/* Monogram Logo */}
-                 <div className="flex items-center gap-2">
-                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center shadow-sm transform transition-transform duration-300 group-hover:scale-105 group-hover:shadow-md">
-                     <span className="text-white font-black text-sm tracking-tight">ST</span>
-                   </div>
-                   <div className="leading-tight">
-                     <div
-                       className="text-lg font-black text-gray-900 tracking-tight"
-                       style={{ fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif', letterSpacing: '-0.01em' }}
-                     >
-                       StyleTrending
-                     </div>
-                     <div
-                       className="text-[10px] font-semibold uppercase text-gray-500"
-                       style={{ letterSpacing: '0.18em', fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif' }}
-                     >
-                       Fashion & Lifestyle
-                     </div>
-                   </div>
-                 </div>
+                 <img
+                   src="https://res.cloudinary.com/de1bg8ivx/image/upload/v1765969744/ef93f9f5-0469-413a-a0d3-24df2b70f27b.png"
+                   alt="StyleTrending logo"
+                   className="h-10 w-auto"
+                 />
               </Link>
             </div>
 
@@ -389,24 +374,12 @@ const Navbar = () => {
            {/* Header with brand logo (matches navbar) */}
           <div className="p-6 pt-10 flex justify-between items-start">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center shadow-sm">
-                <span className="text-white font-black text-sm tracking-tight">ST</span>
-              </div>
-              <div className="leading-tight">
-                <div
-                  className="text-lg font-black text-gray-900 tracking-tight"
-                  style={{ fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif', letterSpacing: '-0.01em' }}
-                >
-                  StyleTrending
-                </div>
-                <div
-                  className="text-[10px] font-semibold uppercase text-gray-500"
-                  style={{ letterSpacing: '0.18em', fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif' }}
-                >
-                  Fashion & Lifestyle
-                </div>
-                {isAuthenticated && <p className="text-xs text-gray-500 mt-1">Hello, {user?.name}</p>}
-              </div>
+              <img
+                src="https://res.cloudinary.com/de1bg8ivx/image/upload/v1765969744/ef93f9f5-0469-413a-a0d3-24df2b70f27b.png"
+                alt="StyleTrending logo"
+                className="h-10 w-auto"
+              />
+              {isAuthenticated && <p className="text-xs text-gray-500 mt-1">Hello, {user?.name}</p>}
             </div>
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 -mr-2 text-gray-400 hover:text-black">
                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" /></svg>
