@@ -17,13 +17,15 @@ const ProductQuickView = ({ product, isOpen, onClose }) => {
   const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(product?.images?.[0] || product?.image || '');
 
+  const isWatch = (product?.category || '').toLowerCase().includes('watch');
+
   useEffect(() => {
     if (product) {
       setMainImage(product.images?.[0] || product.image || '');
-      setSelectedSize(product.sizes?.[0] || '');
+      setSelectedSize(isWatch ? '' : (product.sizes?.[0] || ''));
       setSelectedColor(product.colors?.[0] || '');
     }
-  }, [product]);
+  }, [product, isWatch]);
 
   if (!isOpen || !product) return null;
 
@@ -106,8 +108,8 @@ const ProductQuickView = ({ product, isOpen, onClose }) => {
                   )}
                 </div>
 
-                {/* Sizes */}
-                {product.sizes && product.sizes.length > 0 && (
+                {/* Sizes (skip for watches) */}
+                {!isWatch && product.sizes && product.sizes.length > 0 && (
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
                     <div className="flex flex-wrap gap-2">

@@ -149,10 +149,10 @@ const FilterSidebar = ({ filters, onFilterChange, onClearFilters, brands = [], s
   };
 
   return (
-    <div className="w-full bg-white border border-gray-200 overflow-hidden sticky top-20 shadow-sm hover:shadow-md transition-shadow duration-300 mt-0">
+    <div className="w-full bg-white border border-gray-200 overflow-hidden sticky top-[48px] shadow-sm hover:shadow-md transition-shadow duration-300 mt-0 max-h-[calc(100vh-48px)] flex flex-col">
       
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between">
+      <div className="px-6 py-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-gray-900 rounded-lg shadow-sm">
             <FilterIcon />
@@ -176,7 +176,7 @@ const FilterSidebar = ({ filters, onFilterChange, onClearFilters, brands = [], s
       </div>
 
       {/* Content */}
-      <div className="py-2 overflow-y-auto max-h-[calc(100vh-12rem)] custom-scrollbar">
+      <div className="py-2 overflow-y-auto flex-1 custom-scrollbar">
         
         {/* Sort Section */}
         <FilterSection 

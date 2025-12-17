@@ -177,30 +177,27 @@ const Navbar = () => {
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-0.5">
           <div className="flex items-center justify-between h-10">
 
-            {/* LEFT: Logo & Mobile Toggle */}
+            {/* LEFT: Logo */}
             <div className="flex items-center gap-4">
-              <button 
-                className="md:hidden p-2 -ml-2 text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
-                onClick={() => setIsMobileMenuOpen(true)}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h7" /></svg>
-              </button>
-
               <Link to="/" className="flex-shrink-0 group relative z-10">
-                 {/* Professional E-commerce Logo */}
-                 <div className="flex items-center gap-2.5">
-                   {/* Logo Icon - Stylized "S" */}
-                   <div className="relative">
-                     <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="transform group-hover:scale-105 transition-transform duration-300">
-                       <rect width="36" height="36" rx="8" fill="#000000"/>
-                       <path d="M12 18C12 15.5 13.5 14 16 14C18.5 14 20 15.5 20 17C20 18.5 18.5 19.5 17 20C15.5 20.5 14 21.5 14 23C14 25.5 15.5 27 18 27C20.5 27 22 25.5 22 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                     </svg>
+                 {/* Monogram Logo */}
+                 <div className="flex items-center gap-2">
+                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center shadow-sm transform transition-transform duration-300 group-hover:scale-105 group-hover:shadow-md">
+                     <span className="text-white font-black text-sm tracking-tight">ST</span>
                    </div>
-                   {/* Brand Name */}
-                   <div>
-                     <span className="text-xl font-bold text-black tracking-tight leading-none block">
+                   <div className="leading-tight">
+                     <div
+                       className="text-lg font-black text-gray-900 tracking-tight"
+                       style={{ fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif', letterSpacing: '-0.01em' }}
+                     >
                        StyleTrending
-                     </span>
+                     </div>
+                     <div
+                       className="text-[10px] font-semibold uppercase text-gray-500"
+                       style={{ letterSpacing: '0.18em', fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif' }}
+                     >
+                       Fashion & Lifestyle
+                     </div>
                    </div>
                  </div>
               </Link>
@@ -267,7 +264,7 @@ const Navbar = () => {
 
             {/* RIGHT: Actions */}
             <div className="flex items-center gap-1 md:gap-4">
-              
+
               {/* Expandable Desktop Search */}
               <div className="hidden md:flex items-center justify-end" ref={searchInputRef}>
                 <form 
@@ -322,6 +319,14 @@ const Navbar = () => {
                    </span>
                  )}
               </Link>
+
+              {/* Mobile Menu Toggle (rightmost) */}
+              <button 
+                className="md:hidden p-2 text-gray-800 hover:bg-gray-100 rounded-full transition-colors"
+                onClick={() => setIsMobileMenuOpen(true)}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h7" /></svg>
+              </button>
 
             </div>
           </div>
@@ -380,19 +385,73 @@ const Navbar = () => {
       <div 
         className={`fixed inset-y-0 left-0 z-[61] w-[80%] max-w-xs bg-white transform transition-transform duration-500 cubic-bezier(0.19, 1, 0.22, 1) flex flex-col md:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="flex flex-col h-full">
-           {/* Header */}
-           <div className="p-6 pt-10 flex justify-between items-start">
-             <div>
-                <span className="font-serif text-2xl font-bold tracking-tighter text-black">
-                   URBAN<span className="text-gray-500 font-light italic">VERSA</span>.
-                </span>
-                {isAuthenticated && <p className="text-sm text-gray-500 mt-1">Hello, {user?.name}</p>}
-             </div>
-             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 -mr-2 text-gray-400 hover:text-black">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" /></svg>
-             </button>
-           </div>
+            <div className="flex flex-col h-full">
+           {/* Header with brand logo (matches navbar) */}
+          <div className="p-6 pt-10 flex justify-between items-start">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-black via-gray-900 to-gray-800 flex items-center justify-center shadow-sm">
+                <span className="text-white font-black text-sm tracking-tight">ST</span>
+              </div>
+              <div className="leading-tight">
+                <div
+                  className="text-lg font-black text-gray-900 tracking-tight"
+                  style={{ fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif', letterSpacing: '-0.01em' }}
+                >
+                  StyleTrending
+                </div>
+                <div
+                  className="text-[10px] font-semibold uppercase text-gray-500"
+                  style={{ letterSpacing: '0.18em', fontFamily: 'Inter, "Segoe UI", system-ui, sans-serif' }}
+                >
+                  Fashion & Lifestyle
+                </div>
+                {isAuthenticated && <p className="text-xs text-gray-500 mt-1">Hello, {user?.name}</p>}
+              </div>
+            </div>
+            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 -mr-2 text-gray-400 hover:text-black">
+               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          {/* Auth quick actions */}
+          <div className="px-6 pb-4 flex items-center gap-3">
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-gray-900 rounded-lg shadow-sm hover:bg-gray-800 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  Profile
+                </Link>
+                <button
+                  onClick={() => { logout(); setIsMobileMenuOpen(false); }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 py-3 text-center text-sm font-bold text-gray-900 bg-white border border-gray-200 rounded-lg hover:border-gray-400 transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 py-3 text-center text-sm font-bold text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </div>
 
            {/* Content */}
            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">

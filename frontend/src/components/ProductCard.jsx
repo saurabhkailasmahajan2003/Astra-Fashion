@@ -35,7 +35,8 @@ const ProductCard = ({ product }) => {
     }
   }
   
-  const sizes = product.sizes || ['S', 'M', 'L', 'XL']; 
+  const isWatch = (product.category || '').toLowerCase().includes('watch');
+  const sizes = isWatch ? [] : (product.sizes || ['S', 'M', 'L', 'XL']); 
   const finalPrice = product.finalPrice || product.price || product.mrp || 0;
   const originalPrice = product.originalPrice || product.mrp || product.price || 0;
   const hasDiscount = originalPrice > finalPrice && finalPrice > 0;
