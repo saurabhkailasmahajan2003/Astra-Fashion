@@ -183,7 +183,7 @@ const Navbar = () => {
                  <img
                    src="https://res.cloudinary.com/de1bg8ivx/image/upload/v1765969744/ef93f9f5-0469-413a-a0d3-24df2b70f27b.png"
                    alt="StyleTrending logo"
-                   className="h-10 w-auto"
+                   className="h-8 w-auto"
                  />
               </Link>
             </div>
