@@ -14,6 +14,7 @@ const ProductCard = ({ product }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [showSizes, setShowSizes] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [hoverImageLoaded, setHoverImageLoaded] = useState(false);
 
   // Data Normalization
   // Handle images - support both array and object formats
@@ -50,16 +51,19 @@ const ProductCard = ({ product }) => {
     defaultImageIndex = 1; // Use 2nd image (image2) for lenses
   }
   
-  // Determine which image to show
-  let imageSrc = 'https://via.placeholder.com/400x500?text=No+Image';
+  // Determine which images to show
+  let defaultImageSrc = 'https://via.placeholder.com/400x500?text=No+Image';
+  let hoverImageSrc = null;
+  
   if (productImages.length > 0) {
-    if (isHovered) {
-      // On hover, show next image if available
-      const hoverIndex = defaultImageIndex + 1;
-      imageSrc = productImages.length > hoverIndex ? productImages[hoverIndex] : productImages[defaultImageIndex];
-    } else {
-      // Default: show the appropriate image based on product type
-      imageSrc = productImages[defaultImageIndex];
+    defaultImageSrc = productImages[defaultImageIndex];
+    // Get hover image (next image if available)
+    const hoverIndex = defaultImageIndex + 1;
+    if (productImages.length > hoverIndex) {
+      hoverImageSrc = productImages[hoverIndex];
+    } else if (productImages.length > 0 && defaultImageIndex > 0) {
+      // If no next image, try the first image as hover
+      hoverImageSrc = productImages[0];
     }
   }
 
@@ -118,21 +122,44 @@ const ProductCard = ({ product }) => {
                </span>
             )}
 
-            {/* Main Image */}
-            {imageSrc && (
+            {/* Base Image - Always visible */}
+            {defaultImageSrc && (
               <img
-                src={imageSrc}
+                src={defaultImageSrc}
                 alt={product.name || product.title || 'Product'}
                 onLoad={() => setImageLoaded(true)}
-                // OPTIMIZATION: decoding="async" prevents main thread blocking
                 decoding="async"
                 loading="lazy"
                 className={`
-                  absolute inset-0 w-full h-full object-cover transition-all duration-500 md:group-hover:scale-105
+                  absolute inset-0 w-full h-full object-cover transition-all duration-500
                   ${imageLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'}
                 `}
                 onError={handleImageError}
               />
+            )}
+
+            {/* Hover Image - Appears as cover on hover */}
+            {hoverImageSrc && (
+              <>
+                {/* Preload hover image */}
+                <img
+                  src={hoverImageSrc}
+                  alt=""
+                  className="hidden"
+                  onLoad={() => setHoverImageLoaded(true)}
+                  decoding="async"
+                />
+                {/* Hover cover image */}
+                <img
+                  src={hoverImageSrc}
+                  alt={product.name || product.title || 'Product'}
+                  className={`
+                    absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ease-in-out
+                    ${isHovered && hoverImageLoaded ? 'opacity-100 z-10' : 'opacity-0 z-0'}
+                  `}
+                  onError={handleImageError}
+                />
+              </>
             )}
 
             {/* --- THE FLOATING DOCK --- */}
@@ -220,7 +247,7 @@ const ProductCard = ({ product }) => {
                   <p className="text-xs text-gray-500 mt-0.5">{product.category}</p>
                </div>
                
-               {product.rating && (
+               {product.rating && product.rating > 0 && (
                  <div className="hidden sm:flex items-center gap-1 bg-gray-50 px-1.5 py-0.5 rounded text-[10px] font-bold text-gray-600">
                    <span>★</span>
                    <span>{product.rating}</span>

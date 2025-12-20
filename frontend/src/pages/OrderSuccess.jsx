@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { CheckCircle, Package, Calendar, Receipt, Truck } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { orderAPI } from '../utils/api';
+import { CheckCircle, Package, Calendar, Receipt, Truck, FileText } from 'lucide-react';
+import Invoice from '../components/Invoice';
 
 const OrderSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getCartTotal } = useCart();
+  const { user } = useAuth();
   const [countdown, setCountdown] = useState(10);
   const [isVisible, setIsVisible] = useState(false);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [order, setOrder] = useState(null);
+  const [loadingOrder, setLoadingOrder] = useState(false);
   const paymentMethod = searchParams.get('method') || 'COD';
   const orderId = searchParams.get('orderId') || '';
   
@@ -21,6 +28,26 @@ const OrderSuccess = () => {
   
   // Get order total from localStorage (stored before cart is cleared)
   const [orderTotal, setOrderTotal] = useState(0);
+  
+  // Fetch order details if orderId is available
+  useEffect(() => {
+    if (orderId) {
+      const fetchOrder = async () => {
+        setLoadingOrder(true);
+        try {
+          const response = await orderAPI.getOrder(orderId);
+          if (response.success) {
+            setOrder(response.data.order);
+          }
+        } catch (error) {
+          console.error('Error fetching order:', error);
+        } finally {
+          setLoadingOrder(false);
+        }
+      };
+      fetchOrder();
+    }
+  }, [orderId]);
   
   useEffect(() => {
     const storedTotal = localStorage.getItem('lastOrderTotal');
@@ -276,6 +303,13 @@ const OrderSuccess = () => {
           }}
         >
           <button
+            onClick={() => setShowInvoice(true)}
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+          >
+            <FileText className="w-5 h-5" />
+            View Invoice
+          </button>
+          <button
             onClick={handleGoToOrders}
             className="w-full bg-gradient-to-r from-black to-gray-800 text-white py-3.5 rounded-xl hover:from-gray-800 hover:to-black transition-all duration-300 font-semibold text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
           >
@@ -290,6 +324,39 @@ const OrderSuccess = () => {
           </button>
         </div>
       </div>
+
+      {/* Invoice Modal */}
+      {showInvoice && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setShowInvoice(false)}>
+          <div className="bg-white rounded-lg max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">Invoice</h2>
+              <button
+                onClick={() => setShowInvoice(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              {order ? (
+                <Invoice 
+                  order={order} 
+                  user={user}
+                  onPrint={() => window.print()}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading invoice...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add CSS animations */}
       <style>{`

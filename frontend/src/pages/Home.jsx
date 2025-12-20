@@ -22,7 +22,7 @@ const fetchFreshDrops = async () => {
       productAPI.getLenses({ limit: 10, gender: 'men' })
     ]);
     
-    // Combine shoes from men and women, take exactly 10
+    // Combine shoes from men and women, take exactly 12
     let allShoes = [];
     if (menShoes.success && menShoes.data.products) {
       allShoes = [...allShoes, ...menShoes.data.products];
@@ -30,7 +30,7 @@ const fetchFreshDrops = async () => {
     if (womenShoes.success && womenShoes.data.products) {
       allShoes = [...allShoes, ...womenShoes.data.products];
     }
-    const shoes = allShoes.slice(0, 10);
+    const shoes = allShoes.slice(0, 12);
     
     // Get exactly 10 accessories
     const acc = accessories.success && accessories.data.products 
@@ -52,7 +52,7 @@ const fetchFreshDrops = async () => {
       ? mensLenses.data.products.slice(0, 10) 
       : [];
     
-    // Combine all: 10 shoes + 10 accessories + 10 watches + 10 lenses + 10 men's lenses = 50 products total
+    // Combine all: 12 shoes + 10 accessories + 10 watches + 10 lenses + 10 men's lenses = 52 products total
     return [...shoes, ...acc, ...watch, ...lens, ...mensLens];
   } catch (error) {
     console.error("Error fetching fresh drops:", error);

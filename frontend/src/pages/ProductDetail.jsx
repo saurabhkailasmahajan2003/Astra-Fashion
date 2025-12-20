@@ -28,6 +28,20 @@ const ProductDetail = () => {
   const [loadingTrending, setLoadingTrending] = useState(false);
   const [loadingSale, setLoadingSale] = useState(false);
 
+  // Refs for scrollable containers
+  const recommendedScrollRef = useRef(null);
+  const saleScrollRef = useRef(null);
+  const brandScrollRef = useRef(null);
+  const trendingScrollRef = useRef(null);
+
+  // Scroll state for each section
+  const [scrollStates, setScrollStates] = useState({
+    recommended: { canScrollLeft: false, canScrollRight: false },
+    sale: { canScrollLeft: false, canScrollRight: false },
+    brand: { canScrollLeft: false, canScrollRight: false },
+    trending: { canScrollLeft: false, canScrollRight: false },
+  });
+
   // Review states
   const [reviews, setReviews] = useState([]);
   const [reviewStats, setReviewStats] = useState(null);
@@ -532,6 +546,70 @@ const ProductDetail = () => {
     setSelectedImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
   };
 
+  // Scroll functions for product sections
+  const scrollSection = (ref, direction) => {
+    if (!ref.current) return;
+    const container = ref.current;
+    const firstCard = container.querySelector('.flex-shrink-0');
+    if (!firstCard) return;
+    
+    // Get actual card width including gap
+    const cardWidth = firstCard.offsetWidth;
+    const gap = 16; // gap-4 = 16px
+    const scrollAmount = cardWidth + gap;
+    
+    container.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth'
+    });
+  };
+
+  // Check scroll position and update button states
+  const checkScrollPosition = (ref, sectionKey) => {
+    if (!ref.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = ref.current;
+    setScrollStates(prev => ({
+      ...prev,
+      [sectionKey]: {
+        canScrollLeft: scrollLeft > 0,
+        canScrollRight: scrollLeft < scrollWidth - clientWidth - 1
+      }
+    }));
+  };
+
+  // useEffect to check scroll positions
+  useEffect(() => {
+    const handleScroll = () => {
+      checkScrollPosition(recommendedScrollRef, 'recommended');
+      checkScrollPosition(saleScrollRef, 'sale');
+      checkScrollPosition(brandScrollRef, 'brand');
+      checkScrollPosition(trendingScrollRef, 'trending');
+    };
+
+    // Check initial state
+    handleScroll();
+
+    // Add scroll listeners
+    const refs = [recommendedScrollRef, saleScrollRef, brandScrollRef, trendingScrollRef];
+    refs.forEach(ref => {
+      if (ref.current) {
+        ref.current.addEventListener('scroll', handleScroll);
+      }
+    });
+
+    // Check on resize
+    window.addEventListener('resize', handleScroll);
+
+    return () => {
+      refs.forEach(ref => {
+        if (ref.current) {
+          ref.current.removeEventListener('scroll', handleScroll);
+        }
+      });
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [recommendedProducts, saleProducts, trendingProducts, product?.brand]);
+
   if (loading) return <LoadingState />;
   if (!product) return <NotFoundState />;
 
@@ -943,7 +1021,7 @@ const ProductDetail = () => {
                 {loadingRecommendations ? (
                   <div className="flex gap-4 overflow-x-auto pb-4">
                     {[...Array(4)].map((_, i) => (
-                      <div key={i} className="flex-shrink-0 w-48 animate-pulse">
+                      <div key={i} className="flex-shrink-0 w-56 sm:w-64 animate-pulse">
                         <div className="aspect-[4/5] bg-gray-200 rounded-lg mb-2"></div>
                         <div className="h-4 bg-gray-200 rounded mb-2"></div>
                         <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -952,7 +1030,32 @@ const ProductDetail = () => {
                   </div>
                 ) : (
                   <div className="relative">
+                    {/* Left Arrow */}
+                    {scrollStates.recommended.canScrollLeft && (
+                      <button
+                        onClick={() => scrollSection(recommendedScrollRef, 'left')}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2.5 hover:bg-gray-50 transition-all"
+                        aria-label="Scroll left"
+                      >
+                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
+                    {/* Right Arrow */}
+                    {scrollStates.recommended.canScrollRight && (
+                      <button
+                        onClick={() => scrollSection(recommendedScrollRef, 'right')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2.5 hover:bg-gray-50 transition-all"
+                        aria-label="Scroll right"
+                      >
+                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
                     <div
+                      ref={recommendedScrollRef}
                       className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide"
                       style={{
                         scrollbarWidth: 'none',
@@ -961,7 +1064,7 @@ const ProductDetail = () => {
                     >
                       <div className="flex gap-4 min-w-max">
                         {recommendedProducts.map((recommendedProduct) => (
-                          <div key={recommendedProduct.id} className="flex-shrink-0 w-48">
+                          <div key={recommendedProduct.id} className="flex-shrink-0 w-56 sm:w-64">
                             <ProductCard product={recommendedProduct} />
                           </div>
                         ))}
@@ -979,7 +1082,7 @@ const ProductDetail = () => {
                 {loadingSale ? (
                   <div className="flex gap-4 overflow-x-auto pb-4">
                     {[...Array(4)].map((_, i) => (
-                      <div key={i} className="flex-shrink-0 w-48 animate-pulse">
+                      <div key={i} className="flex-shrink-0 w-56 sm:w-64 animate-pulse">
                         <div className="aspect-[4/5] bg-gray-200 rounded-lg mb-2"></div>
                         <div className="h-4 bg-gray-200 rounded mb-2"></div>
                         <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -988,7 +1091,32 @@ const ProductDetail = () => {
                   </div>
                 ) : (
                   <div className="relative">
+                    {/* Left Arrow */}
+                    {scrollStates.sale.canScrollLeft && (
+                      <button
+                        onClick={() => scrollSection(saleScrollRef, 'left')}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2.5 hover:bg-gray-50 transition-all"
+                        aria-label="Scroll left"
+                      >
+                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
+                    {/* Right Arrow */}
+                    {scrollStates.sale.canScrollRight && (
+                      <button
+                        onClick={() => scrollSection(saleScrollRef, 'right')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2.5 hover:bg-gray-50 transition-all"
+                        aria-label="Scroll right"
+                      >
+                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
                     <div
+                      ref={saleScrollRef}
                       className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide"
                       style={{
                         scrollbarWidth: 'none',
@@ -997,7 +1125,7 @@ const ProductDetail = () => {
                     >
                       <div className="flex gap-4 min-w-max">
                         {saleProducts.map((saleProduct) => (
-                          <div key={saleProduct.id} className="flex-shrink-0 w-48">
+                          <div key={saleProduct.id} className="flex-shrink-0 w-56 sm:w-64">
                             <ProductCard product={saleProduct} />
                           </div>
                         ))}
@@ -1015,7 +1143,7 @@ const ProductDetail = () => {
                 {loadingRecommendations ? (
                   <div className="flex gap-4 overflow-x-auto pb-4">
                     {[...Array(4)].map((_, i) => (
-                      <div key={i} className="flex-shrink-0 w-48 animate-pulse">
+                      <div key={i} className="flex-shrink-0 w-56 sm:w-64 animate-pulse">
                         <div className="aspect-[4/5] bg-gray-200 rounded-lg mb-2"></div>
                         <div className="h-4 bg-gray-200 rounded mb-2"></div>
                         <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -1024,7 +1152,32 @@ const ProductDetail = () => {
                   </div>
                 ) : (
                   <div className="relative">
+                    {/* Left Arrow */}
+                    {scrollStates.brand.canScrollLeft && (
+                      <button
+                        onClick={() => scrollSection(brandScrollRef, 'left')}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2.5 hover:bg-gray-50 transition-all"
+                        aria-label="Scroll left"
+                      >
+                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
+                    {/* Right Arrow */}
+                    {scrollStates.brand.canScrollRight && (
+                      <button
+                        onClick={() => scrollSection(brandScrollRef, 'right')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2.5 hover:bg-gray-50 transition-all"
+                        aria-label="Scroll right"
+                      >
+                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
                     <div
+                      ref={brandScrollRef}
                       className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide"
                       style={{
                         scrollbarWidth: 'none',
@@ -1036,7 +1189,7 @@ const ProductDetail = () => {
                           .filter(p => p.brand === product.brand)
                           .slice(0, 8)
                           .map((recommendedProduct) => (
-                            <div key={recommendedProduct.id} className="flex-shrink-0 w-48">
+                            <div key={recommendedProduct.id} className="flex-shrink-0 w-56 sm:w-64">
                               <ProductCard product={recommendedProduct} />
                             </div>
                           ))}
@@ -1050,11 +1203,10 @@ const ProductDetail = () => {
             {/* Trending Now - Random Mix from ALL Categories */}
             {(trendingProducts.length > 0 || loadingTrending) && (
               <div>
-
                 {loadingTrending ? (
                   <div className="flex gap-4 overflow-x-auto pb-4">
                     {[...Array(4)].map((_, i) => (
-                      <div key={i} className="flex-shrink-0 w-48 animate-pulse">
+                      <div key={i} className="flex-shrink-0 w-56 sm:w-64 animate-pulse">
                         <div className="aspect-[4/5] bg-gray-200 rounded-lg mb-2"></div>
                         <div className="h-4 bg-gray-200 rounded mb-2"></div>
                         <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -1063,7 +1215,32 @@ const ProductDetail = () => {
                   </div>
                 ) : (
                   <div className="relative">
+                    {/* Left Arrow */}
+                    {scrollStates.trending.canScrollLeft && (
+                      <button
+                        onClick={() => scrollSection(trendingScrollRef, 'left')}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2.5 hover:bg-gray-50 transition-all"
+                        aria-label="Scroll left"
+                      >
+                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
+                    {/* Right Arrow */}
+                    {scrollStates.trending.canScrollRight && (
+                      <button
+                        onClick={() => scrollSection(trendingScrollRef, 'right')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2.5 hover:bg-gray-50 transition-all"
+                        aria-label="Scroll right"
+                      >
+                        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    )}
                     <div
+                      ref={trendingScrollRef}
                       className="overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide"
                       style={{
                         scrollbarWidth: 'none',
@@ -1072,7 +1249,7 @@ const ProductDetail = () => {
                     >
                       <div className="flex gap-4 min-w-max">
                         {trendingProducts.map((trendingProduct) => (
-                          <div key={trendingProduct.id} className="flex-shrink-0 w-48">
+                          <div key={trendingProduct.id} className="flex-shrink-0 w-56 sm:w-64">
                             <ProductCard product={trendingProduct} />
                           </div>
                         ))}

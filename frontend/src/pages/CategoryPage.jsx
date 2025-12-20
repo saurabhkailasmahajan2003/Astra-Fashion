@@ -19,7 +19,6 @@ const CategoryPage = () => {
   
   // State for Pagination & Filters
   const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 12;
 
   const [filters, setFilters] = useState({
     priceRange: null,
@@ -28,6 +27,7 @@ const CategoryPage = () => {
     sortBy: null,
   });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true); // Desktop filter visibility
 
   const pathSegments = pathname.split('/').filter(Boolean);
   const genderFromPath = pathSegments[0] === 'men' ? 'men' : pathSegments[0] === 'women' ? 'women' : null;
@@ -60,6 +60,8 @@ const CategoryPage = () => {
         'trousers': { subCategory: 'trousers', displayName: 'Trousers' },
         'shoes': { subCategory: 'shoes', displayName: 'Shoes' },
         'shoe': { subCategory: 'shoes', displayName: 'Shoes' },
+        'saree': { subCategory: 'saree', displayName: 'Saree' },
+        'sari': { subCategory: 'saree', displayName: 'Saree' },
         'accessories': { subCategory: 'accessories', displayName: 'Accessories' },
       };
       const categoryInfo = categoryMap[derivedCategory.toLowerCase()];
@@ -116,18 +118,26 @@ const CategoryPage = () => {
     setPage(1); // Reset to page 1 when filters change
   }, [allProducts, filters, derivedGender, derivedCategory]);
 
+  // Reset to page 1 when filter visibility changes (items per page changes)
+  useEffect(() => {
+    setPage(1);
+  }, [showFilters]);
+
+  // Calculate items per page based on filter visibility
+  const itemsPerPage = showFilters ? 21 : 28;
+
   // 3. Pagination Logic (Updates visible products)
   useEffect(() => {
-    const startIndex = (page - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
     setProducts(filteredList.slice(startIndex, endIndex));
     
     // Scroll to top when page changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [filteredList, page]);
+  }, [filteredList, page, itemsPerPage]);
 
   // Calculate total pages
-  const totalPages = Math.ceil(filteredList.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredList.length / itemsPerPage);
 
   // Pagination handlers
   const handlePageChange = (newPage) => {
@@ -223,6 +233,8 @@ const CategoryPage = () => {
         'trousers': { subCategory: 'trousers', displayName: 'Trousers' },
         'shoes': { subCategory: 'shoes', displayName: 'Shoes' },
         'shoe': { subCategory: 'shoes', displayName: 'Shoes' },
+        'saree': { subCategory: 'saree', displayName: 'Saree' },
+        'sari': { subCategory: 'saree', displayName: 'Saree' },
         'accessories': { subCategory: 'accessories', displayName: 'Accessories' },
       };
 
@@ -316,60 +328,95 @@ const CategoryPage = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Breadcrumb Navigation - Always Visible */}
-        {(derivedGender || pathname === '/men' || pathname === '/women') && (
-          <nav className="mb-4">
-            <ol className="flex items-center space-x-2 text-sm">
-              <li>
-                <Link to="/" className="text-blue-600 hover:text-blue-800">Home</Link>
-              </li>
-              <li className="text-gray-400">/</li>
-              {derivedGender && (
-                <>
+        {/* Header Row - Breadcrumb, Title, and Product Count */}
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Breadcrumb Navigation */}
+            {(derivedGender || pathname === '/men' || pathname === '/women') && (
+              <nav>
+                <ol className="flex items-center space-x-2 text-sm text-gray-500">
                   <li>
-                    <Link to={`/${derivedGender}`} className="text-blue-600 hover:text-blue-800 capitalize">
-                      {derivedGender}
+                    <Link to="/" className="hover:text-gray-900 transition-colors">
+                      Home
                     </Link>
                   </li>
-                  {category && (
+                  <li className="text-gray-400">/</li>
+                  {derivedGender && (
                     <>
-                      <li className="text-gray-400">/</li>
-                      <li className="text-gray-600 capitalize">
-                        {category === 'tshirt' ? 'T-Shirt' : category}
+                      <li>
+                        <Link to={`/${derivedGender}`} className="hover:text-gray-900 transition-colors capitalize">
+                          {derivedGender}
+                        </Link>
                       </li>
+                      {category && (
+                        <>
+                          <li className="text-gray-400">/</li>
+                          <li className="text-gray-900 capitalize">
+                            {category === 'tshirt' ? 'T-Shirt' : category}
+                          </li>
+                        </>
+                      )}
                     </>
                   )}
-                </>
-              )}
-              {!derivedGender && (pathname === '/men' || pathname === '/women') && (
-                <li className="text-gray-600 capitalize">
-                  {pathname.replace('/', '')}
-                </li>
-              )}
-            </ol>
-          </nav>
-        )}
+                  {!derivedGender && (pathname === '/men' || pathname === '/women') && (
+                    <li className="text-gray-900 capitalize">
+                      {pathname.replace('/', '')}
+                    </li>
+                  )}
+                </ol>
+              </nav>
+            )}
+            
+            {/* Title */}
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isLoading && !pageTitle ? 'Loading...' : pageTitle}
+            </h1>
+          </div>
 
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
-            {isLoading && !pageTitle ? 'Loading...' : pageTitle}
-          </h1>
-          {/* Mobile Filter Button */}
-          <button
-            onClick={() => setShowMobileFilters(!showMobileFilters)}
-            className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-            disabled={isLoading}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Filters
-          </button>
+          <div className="flex items-center gap-4">
+            {/* Product Count */}
+            {!isLoading && filteredList.length > 0 && (
+              <p className="text-sm text-gray-500 whitespace-nowrap">
+                Showing {((page - 1) * itemsPerPage) + 1} - {Math.min(page * itemsPerPage, filteredList.length)} of {filteredList.length} products
+              </p>
+            )}
+            
+            {/* Filter Toggle Button */}
+            <button
+              onClick={() => {
+                if (window.innerWidth >= 1024) {
+                  setShowFilters(!showFilters);
+                } else {
+                  setShowMobileFilters(!showMobileFilters);
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+              disabled={isLoading}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span className="hidden lg:inline">{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
+              <span className="lg:hidden">Filters</span>
+            </button>
+          </div>
         </div>
         
-        <div className="flex gap-6">
+        <div className="flex gap-6 relative">
           {/* Filter Sidebar */}
-          <div className={`${showMobileFilters ? 'block' : 'hidden'} lg:block w-full lg:w-1/4 flex-shrink-0 ${showMobileFilters ? 'fixed inset-0 z-50 bg-white p-4 overflow-y-auto lg:relative lg:z-auto lg:bg-transparent lg:p-0 lg:-ml-8' : 'lg:-ml-8'}`}>
+          <div className={`
+            ${showMobileFilters ? 'block' : 'hidden'} 
+            lg:block
+            w-full 
+            lg:w-1/4 
+            lg:flex-shrink-0
+            lg:transition-transform lg:duration-500 lg:ease-[cubic-bezier(0.25,0.1,0.25,1)]
+            ${showFilters 
+              ? 'lg:translate-x-0 lg:pointer-events-auto' 
+              : 'lg:-translate-x-full lg:pointer-events-none lg:absolute lg:left-0 lg:overflow-hidden'
+            }
+            ${showMobileFilters ? 'fixed inset-0 z-50 bg-white p-4 overflow-y-auto lg:relative lg:z-auto lg:bg-transparent lg:p-0 lg:-ml-8' : 'lg:-ml-8'}
+          `}>
              {showMobileFilters && (
                <div className="lg:hidden flex items-center justify-between mb-4">
                  <h2 className="text-xl font-bold">Filters</h2>
@@ -386,7 +433,7 @@ const CategoryPage = () => {
                <div className="lg:hidden mb-4 space-y-2">
                  <p className="text-xs uppercase tracking-wide text-gray-500">Subcategories</p>
                  <div className="flex flex-wrap gap-2">
-                   {['shirt', 'tshirt', 'trousers', 'shoes', 'accessories'].map((sub) => (
+                   {['shirt', 'tshirt', 'trousers', 'saree', 'shoes', 'accessories'].map((sub) => (
                      <Link
                        key={sub}
                        to={`/${derivedGender}/${sub}`}
@@ -420,18 +467,15 @@ const CategoryPage = () => {
           </div>
 
           {/* Products Grid Area */}
-          <div className="flex-1 w-full lg:w-auto">
+          <div className={`
+            flex-1 w-full lg:w-auto 
+            lg:transition-all lg:duration-500 lg:ease-[cubic-bezier(0.25,0.1,0.25,1)]
+            ${showFilters ? 'lg:translate-y-0' : 'lg:-translate-y-2'}
+          `}>
             {isLoading ? null : (
               products.length > 0 ? (
                 <>
-                  <div className="mb-4 text-gray-600">
-                    Showing {((page - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(page * ITEMS_PER_PAGE, filteredList.length)} of {filteredList.length} products
-                    {allProducts.length !== filteredList.length && (
-                      <span className="ml-2 text-sm">(filtered)</span>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className={`grid grid-cols-2 gap-4 sm:gap-6 ${showFilters ? 'lg:grid-cols-3 xl:grid-cols-4' : 'lg:grid-cols-4'}`}>
                     {products.map((product) => (
                       <ProductCard key={product._id || product.id} product={normalizeProduct(product)} />
                     ))}

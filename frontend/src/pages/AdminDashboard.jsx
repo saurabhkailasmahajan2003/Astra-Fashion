@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 const categoryOptions = [
   { label: 'Men', value: 'men' },
   { label: 'Women', value: 'women' },
+  { label: 'Saree', value: 'saree' },
   { label: 'Watches', value: 'watches' },
   { label: 'Lens', value: 'lens' },
   { label: 'Accessories', value: 'accessories' },
@@ -15,8 +16,8 @@ const statusOptions = ['pending', 'processing', 'shipped', 'delivered', 'cancell
 
 // Subcategory options based on category
 const subCategoryOptions = {
-  men: ['shirt', 'tshirt', 'jeans', 'trousers'],
-  women: ['shirt', 'tshirt', 'jeans', 'trousers'],
+  men: ['shirt', 'tshirt', 'jeans', 'trousers', 'shoes'],
+  women: ['shirt', 'tshirt', 'jeans', 'trousers', 'saree', 'shoes'],
   watches: ['analog', 'digital', 'smartwatch', 'sports', 'luxury'],
   lens: ['reading', 'sunglasses', 'computer', 'blue-light', 'progressive'],
   accessories: ['belt', 'wallet', 'bag', 'cap', 'watch-strap'],
@@ -91,6 +92,10 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [productCategory, setProductCategory] = useState('men');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('');
+  const [sortBy, setSortBy] = useState('default');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
   const [editingProduct, setEditingProduct] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [productForm, setProductForm] = useState({
@@ -121,6 +126,7 @@ const AdminDashboard = () => {
     }
     if (activeSection === 'products' || activeSection === 'add-product' || activeSection === 'edit-product' || activeSection === 'delete-product') {
       fetchProducts(productCategory);
+      setSelectedSubCategory(''); // Reset subcategory filter when category changes
     }
     if (activeSection === 'users') {
       fetchUsers();
@@ -385,52 +391,228 @@ const AdminDashboard = () => {
                     <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">{summary.totalUsers}</p>
                   </div>
                   <div className="bg-white rounded-2xl border p-4 sm:p-5 shadow-sm">
-                    <p className="text-xs uppercase text-gray-500">Inventory</p>
+                    <p className="text-xs uppercase text-gray-500">Total Products</p>
                     <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">
-                      {Object.values(summary.inventory || {}).reduce((a, b) => a + b, 0)}
+                      {summary.totalProducts?.toLocaleString() || 0}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">By category</p>
+                    <p className="text-xs text-gray-500 mt-1">All collections</p>
                   </div>
                 </>
               ) : (
                 <p className="text-gray-500 text-sm">Loading summary...</p>
               )}
             </div>
+
+            {/* Category-wise Product Count */}
+            {summary && summary.categoryCounts && Object.keys(summary.categoryCounts).length > 0 && (
+              <div className="bg-white rounded-2xl border p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Products by Category</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {Object.entries(summary.categoryCounts).map(([category, count]) => (
+                    <div key={category} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <p className="text-xs uppercase text-gray-500 mb-1">
+                        {category === 'lens' ? 'Lens' :
+                         category.charAt(0).toUpperCase() + category.slice(1)}
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900">{count?.toLocaleString() || 0}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-gray-700">Total Products</p>
+                    <p className="text-lg font-bold text-gray-900">
+                      {summary.totalProducts?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
 
       case 'products':
+        // Filter products by subcategory if selected
+        let filteredProducts = selectedSubCategory
+          ? products.filter((product) => {
+              // Get subcategory from various possible field names
+              const productSubCategory = (product.subCategory || product.subcategory || '').toLowerCase().trim();
+              const normalizedSelectedSub = selectedSubCategory.toLowerCase().trim();
+              
+              // For saree filtering, also check if product title contains "saree" or is from Saree collection
+              if (normalizedSelectedSub === 'saree') {
+                const title = (product.title || product.name || '').toLowerCase();
+                const isSareeByTitle = title.includes('saree') || title.includes('sari');
+                const isSareeByCategory = product.category === 'saree' || product.category === 'Saree';
+                
+                return productSubCategory === 'saree' || 
+                       productSubCategory === 'sari' ||
+                       isSareeByTitle ||
+                       isSareeByCategory;
+              }
+              
+              // For other subcategories, do exact match
+              return productSubCategory === normalizedSelectedSub;
+            })
+          : products;
+
+        // Sort products by price
+        if (sortBy !== 'default') {
+          filteredProducts = [...filteredProducts].sort((a, b) => {
+            const priceA = a.finalPrice || a.price || 0;
+            const priceB = b.finalPrice || b.price || 0;
+            
+            if (sortBy === 'price-low') {
+              return priceA - priceB;
+            } else if (sortBy === 'price-high') {
+              return priceB - priceA;
+            }
+            return 0;
+          });
+        }
+
+        // Calculate pagination
+        const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+        // Reset to page 1 if current page is out of bounds
+        if (currentPage > totalPages && totalPages > 0) {
+          setCurrentPage(1);
+        }
+
         return (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">View Products</h2>
-              <select
-                value={productCategory}
-                onChange={(e) => setProductCategory(e.target.value)}
-                className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
-              >
-                {categoryOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <select
+                  value={productCategory}
+                onChange={(e) => {
+                  setProductCategory(e.target.value);
+                  setSelectedSubCategory(''); // Reset subcategory when category changes
+                  setSortBy('default'); // Reset sort when category changes
+                  setCurrentPage(1); // Reset to first page when category changes
+                }}
+                  className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
+                >
+                  {categoryOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    setCurrentPage(1); // Reset to first page when sort changes
+                  }}
+                  className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
+                >
+                  <option value="default">Sort by: Default</option>
+                  <option value="price-low">Sort by: Price (Low to High)</option>
+                  <option value="price-high">Sort by: Price (High to Low)</option>
+                </select>
+              </div>
             </div>
+            
+            {/* Subcategory Filter Buttons */}
+            {subCategoryOptions[productCategory] && subCategoryOptions[productCategory].length > 0 && (
+              <div className="bg-white rounded-lg border p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-sm font-medium text-gray-700">Filter by Sub Category:</span>
+                  {selectedSubCategory && (
+                    <button
+                      onClick={() => {
+                        setSelectedSubCategory('');
+                        setCurrentPage(1); // Reset to first page when filter clears
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-700 underline"
+                    >
+                      Clear Filter
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedSubCategory('');
+                      setCurrentPage(1); // Reset to first page when filter changes
+                    }}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                      selectedSubCategory === ''
+                        ? 'bg-gray-900 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {subCategoryOptions[productCategory].map((subCat) => (
+                    <button
+                      key={subCat}
+                      onClick={() => {
+                        setSelectedSubCategory(subCat);
+                        setCurrentPage(1); // Reset to first page when filter changes
+                      }}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                        selectedSubCategory === subCat
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {subCat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {loading ? (
               <p className="text-sm text-gray-500">Loading...</p>
-            ) : products.length === 0 ? (
-              <p className="text-sm text-gray-500">No products in this category yet.</p>
+            ) : filteredProducts.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                {selectedSubCategory 
+                  ? `No products found in ${selectedSubCategory} subcategory.`
+                  : 'No products in this category yet.'}
+              </p>
             ) : (
-              <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {products.map((product) => (
+              <>
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                  <p>
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} products
+                  </p>
+                </div>
+                <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  {paginatedProducts.map((product) => (
                   <div key={product._id} className="bg-white border rounded-lg overflow-hidden">
-                    {product.images?.[0] && (
-                      <img
-                        src={product.images[0]}
-                        alt={product.name}
-                        className="w-full h-48 sm:h-60 object-cover"
-                      />
-                    )}
+                    {(() => {
+                      // Handle different image formats
+                      let imageUrl = null;
+                      if (Array.isArray(product.images) && product.images.length > 0) {
+                        imageUrl = product.images[0];
+                      } else if (product.images && typeof product.images === 'object') {
+                        // Handle object format (e.g., { image1: 'url', image2: 'url' })
+                        imageUrl = product.images.image1 || product.images.image2 || product.images.image3 || product.images.image4;
+                      } else if (typeof product.images === 'string') {
+                        imageUrl = product.images;
+                      }
+                      return imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={product.name || product.title || 'Product'}
+                          className="w-full h-48 sm:h-60 object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-48 sm:h-60 bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-400 text-sm">No Image</span>
+                        </div>
+                      );
+                    })()}
                     <div className="p-3 sm:p-4">
                       <h3 className="font-semibold text-gray-900 text-sm sm:text-base line-clamp-2">{product.name}</h3>
                       <p className="text-xs sm:text-sm text-gray-600 mt-1">{product.brand}</p>
@@ -455,7 +637,66 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+                
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === 1
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              currentPage === pageNum
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === totalPages
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         );
@@ -483,21 +724,29 @@ const AdminDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Sub Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sub Category *</label>
                   <select
                     name="subCategory"
                     value={productForm.subCategory}
                     onChange={handleProductFormChange}
                     className="w-full border rounded-lg px-3 py-2 text-sm"
                     required
+                    disabled={!productForm.category}
                   >
-                    <option value="">Select Sub Category</option>
-                    {subCategoryOptions[productForm.category]?.map((subCat) => (
+                    <option value="">
+                      {productForm.category 
+                        ? 'Select Sub Category' 
+                        : 'Select Category First'}
+                    </option>
+                    {productForm.category && subCategoryOptions[productForm.category]?.map((subCat) => (
                       <option key={subCat} value={subCat}>
-                        {subCat.charAt(0).toUpperCase() + subCat.slice(1)}
+                        {subCat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                       </option>
                     ))}
                   </select>
+                  {productForm.category && !subCategoryOptions[productForm.category] && (
+                    <p className="text-xs text-gray-500 mt-1">No subcategories available for this category</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
@@ -678,21 +927,29 @@ const AdminDashboard = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Sub Category</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Sub Category *</label>
                     <select
                       name="subCategory"
                       value={productForm.subCategory}
                       onChange={handleProductFormChange}
                       className="w-full border rounded-lg px-3 py-2 text-sm"
                       required
+                      disabled={!productForm.category}
                     >
-                      <option value="">Select Sub Category</option>
-                      {subCategoryOptions[productForm.category]?.map((subCat) => (
+                      <option value="">
+                        {productForm.category 
+                          ? 'Select Sub Category' 
+                          : 'Select Category First'}
+                      </option>
+                      {productForm.category && subCategoryOptions[productForm.category]?.map((subCat) => (
                         <option key={subCat} value={subCat}>
-                          {subCat.charAt(0).toUpperCase() + subCat.slice(1)}
+                          {subCat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                         </option>
                       ))}
                     </select>
+                    {productForm.category && !subCategoryOptions[productForm.category] && (
+                      <p className="text-xs text-gray-500 mt-1">No subcategories available for this category</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>

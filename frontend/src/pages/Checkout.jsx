@@ -4,7 +4,8 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { paymentAPI, profileAPI, orderAPI } from '../utils/api';
 import { loadScript } from '../utils/razorpay';
-import { Check, Package } from 'lucide-react';
+import { Check, Package, FileText } from 'lucide-react';
+import Invoice from '../components/Invoice';
 
 const Checkout = () => {
   const { cart, getCartTotal, clearCart } = useCart();
@@ -20,6 +21,7 @@ const Checkout = () => {
   const [isProcessingOrder, setIsProcessingOrder] = useState(false); // Show processing state
   const [processingStep, setProcessingStep] = useState(0); // Track processing steps
   const [orderData, setOrderData] = useState(null); // Store order data for success page
+  const [showInvoicePreview, setShowInvoicePreview] = useState(false); // Show invoice preview
   const [shippingAddress, setShippingAddress] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -857,11 +859,56 @@ const Checkout = () => {
                 <p className="text-xs text-gray-500 mt-3 text-center">
                   By placing your order, you agree to our Terms & Conditions
                 </p>
+                <button
+                  onClick={() => setShowInvoicePreview(true)}
+                  className="w-full mt-3 bg-white text-gray-700 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Preview Invoice
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Invoice Preview Modal */}
+      {showInvoicePreview && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto" onClick={() => setShowInvoicePreview(false)}>
+          <div className="bg-white rounded-lg max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">Invoice Preview</h2>
+              <button
+                onClick={() => setShowInvoicePreview(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <Invoice 
+                order={{
+                  items: cart.map(item => ({
+                    product: item.product || item,
+                    quantity: item.quantity,
+                    size: item.size || '',
+                    color: item.color || '',
+                    price: (item.product || item).price || (item.product || item).finalPrice || 0,
+                  })),
+                  totalAmount: getCartTotal(),
+                  shippingAddress: shippingAddress,
+                  paymentMethod: paymentMethod,
+                  orderDate: new Date(),
+                  status: 'pending',
+                }} 
+                user={user}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
