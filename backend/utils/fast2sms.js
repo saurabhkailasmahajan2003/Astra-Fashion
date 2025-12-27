@@ -17,18 +17,28 @@ export const sendOTP = async (phoneNumber, otp) => {
       throw new Error('Phone number must be 10 digits');
     }
 
-    // Fast2SMS API v2 format
-    const response = await axios.get(FAST2SMS_URL, {
-      params: {
-        authorization: FAST2SMS_API_KEY,
-        route: 'otp',
-        variables_values: otp,
+    // Fast2SMS API v2 format - Use 'q' route (Quick SMS) which doesn't require website verification
+    // The 'otp' route requires website verification, so we use 'q' route with a custom message
+    const message = `Your OTP for login is ${otp}. Do not share this OTP with anyone. Valid for 10 minutes.`;
+    
+    // Use POST request with 'q' route (Quick SMS)
+    const response = await axios.post(
+      FAST2SMS_URL,
+      {
+        route: 'q',
+        message: message,
         numbers: cleanPhone,
+        flash: 0, // 0 for normal SMS, 1 for flash SMS
       },
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+      {
+        headers: {
+          'authorization': FAST2SMS_API_KEY,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log('Fast2SMS Response:', response.data);
 
     // Fast2SMS returns success in return field
     if (response.data.return === true) {
@@ -38,20 +48,22 @@ export const sendOTP = async (phoneNumber, otp) => {
         requestId: response.data.request_id,
       };
     } else {
-      throw new Error(response.data.message || 'Failed to send OTP');
+      const errorMsg = response.data.message || 'Failed to send OTP';
+      console.error('Fast2SMS API Error:', errorMsg, response.data);
+      throw new Error(errorMsg);
     }
   } catch (error) {
-    console.error('Fast2SMS Error:', error.response?.data || error.message);
+    console.error('Fast2SMS Error Details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
     
-    // If API call fails, still allow development to continue
-    // In production, you might want to throw the error
+    // In development, return OTP for testing but still show it failed
     if (process.env.NODE_ENV === 'development') {
-      console.log('Fast2SMS failed, but continuing in development mode');
-      return {
-        success: true,
-        message: 'OTP would be sent (development mode)',
-        devOtp: otp, // Include OTP for testing
-      };
+      console.log('Fast2SMS failed in development mode. OTP for testing:', otp);
+      // Still throw error so backend knows it failed
+      throw new Error(`SMS failed: ${error.response?.data?.message || error.message}. Dev OTP: ${otp}`);
     }
     
     throw new Error(error.response?.data?.message || error.message || 'Failed to send OTP');

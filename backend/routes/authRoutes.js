@@ -165,7 +165,7 @@ router.post('/send-otp', async (req, res) => {
 
     // Send OTP via Fast2SMS
     try {
-      await sendOTP(cleanPhone, otp);
+      const smsResult = await sendOTP(cleanPhone, otp);
       
       res.status(200).json({
         success: true,
@@ -173,14 +173,26 @@ router.post('/send-otp', async (req, res) => {
       });
     } catch (smsError) {
       console.error('SMS sending error:', smsError);
-      // Still return success but log the error
-      // In development, you might want to return the OTP for testing
-      res.status(200).json({
-        success: true,
-        message: 'OTP generated successfully',
-        // Only include OTP in development for testing
-        ...(process.env.NODE_ENV === 'development' && { otp }),
-      });
+      
+      // Extract OTP from error message if in development
+      const devOtpMatch = smsError.message?.match(/Dev OTP: (\d+)/);
+      const devOtp = devOtpMatch ? devOtpMatch[1] : null;
+      
+      // In development, return OTP for testing but indicate SMS failed
+      if (process.env.NODE_ENV === 'development' && devOtp) {
+        res.status(200).json({
+          success: true,
+          message: `SMS service unavailable. OTP for testing: ${devOtp}`,
+          otp: devOtp,
+          smsFailed: true,
+        });
+      } else {
+        // In production, return error
+        res.status(500).json({
+          success: false,
+          message: smsError.message || 'Failed to send OTP. Please try again later.',
+        });
+      }
     }
   } catch (error) {
     console.error('Send OTP error:', error);

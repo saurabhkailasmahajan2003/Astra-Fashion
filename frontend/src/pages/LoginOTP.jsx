@@ -42,11 +42,16 @@ const LoginOTP = () => {
       
       if (response.success) {
         setExpandForm(true);
-        setSuccess('OTP sent successfully! Please check your phone.');
         setIsLoading(false);
-        // In development, show OTP if provided
-        if (response.otp) {
-          setSuccess(`OTP sent! (Dev mode - OTP: ${response.otp})`);
+        // Show appropriate message based on whether SMS actually worked
+        if (response.smsFailed || response.otp) {
+          // SMS failed but OTP is provided for testing
+          setSuccess(`SMS service unavailable. Use this OTP for testing: ${response.otp || 'Check console'}`);
+          setError(''); // Clear any previous errors
+        } else {
+          // SMS sent successfully
+          setSuccess('OTP sent successfully! Please check your phone.');
+          setError(''); // Clear any previous errors
         }
       } else {
         setError(response.message || "Failed to send OTP");
