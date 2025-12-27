@@ -1,10 +1,7 @@
 // src/pages/Login-otp.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-
-// CORRECT IMPORT: Points to src/firebase.js
-import { auth } from '../firebase'; 
+import { authAPI } from '../utils/api'; 
 
 const LeftIcon = ({ children }) => (
   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
@@ -16,59 +13,56 @@ const LoginOTP = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [expandForm, setExpandForm] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const generateRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': (response) => {
-          // reCAPTCHA solved
-        }
-      });
-    }
-  };
-
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     
-    if (phoneNumber.length < 10) {
-      setError("Please enter a valid phone number");
+    // Clean phone number (remove non-digits)
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    
+    if (cleanPhone.length !== 10) {
+      setError("Please enter a valid 10-digit phone number");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      generateRecaptcha();
-      const appVerifier = window.recaptchaVerifier;
-      // Adds +91 automatically if user didn't type it
-      const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`;
-
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      setConfirmationResult(confirmation);
-      setExpandForm(true);
-      setIsLoading(false);
+      const response = await authAPI.sendOTP(cleanPhone);
+      
+      if (response.success) {
+        setExpandForm(true);
+        setSuccess('OTP sent successfully! Please check your phone.');
+        setIsLoading(false);
+        // In development, show OTP if provided
+        if (response.otp) {
+          setSuccess(`OTP sent! (Dev mode - OTP: ${response.otp})`);
+        }
+      } else {
+        setError(response.message || "Failed to send OTP");
+        setIsLoading(false);
+      }
     } catch (err) {
       setIsLoading(false);
       console.error("Error sending OTP:", err);
-      // Reset recaptcha
-      if(window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-      }
-      setError("Failed to send OTP. " + err.message);
+      setError(err.message || "Failed to send OTP. Please try again.");
     }
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setIsLoading(true);
 
     if (otp.length !== 6) {
@@ -77,14 +71,58 @@ const LoginOTP = () => {
       return;
     }
 
+    // If new user checkbox is checked, require name and email
+    if (isNewUser && (!name || !email)) {
+      setError("Please provide name and email for new user registration");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await confirmationResult.confirm(otp);
-      navigate('/'); 
+      const cleanPhone = phoneNumber.replace(/\D/g, '');
+      // Send name and email only if it's a new user
+      const response = await authAPI.verifyOTP(
+        cleanPhone, 
+        otp, 
+        isNewUser ? name : null, 
+        isNewUser ? email : null
+      );
+      
+      if (response.success) {
+        // Store token and user data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Reload to update auth state
+        window.location.href = '/';
+      } else {
+        // If error says user needs registration, show the form
+        if (response.message && (response.message.includes('registration requires') || response.requiresRegistration)) {
+          setIsNewUser(true);
+          setError("Please fill in your name and email to complete registration");
+        } else {
+          setError(response.message || "Invalid OTP. Please check and try again.");
+        }
+        setIsLoading(false);
+      }
     } catch (err) {
       setIsLoading(false);
-      setError("Invalid OTP. Please check and try again.");
+      
+      // Check if error has response data
+      const errorData = err.response?.data || {};
+      const errorMessage = errorData.message || err.message || "Invalid OTP. Please check and try again.";
+      const needsRegistration = errorData.requiresRegistration || errorMessage.includes('registration requires');
+      
+      // If error says user needs registration, show the form
+      if (needsRegistration) {
+        setIsNewUser(true);
+        setError("Please fill in your name and email to complete registration");
+      } else {
+        setError(errorMessage);
+      }
     }
   };
+
 
   const inputClass = "block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-zinc-800 focus:border-transparent sm:text-sm transition duration-150 ease-in-out";
 
@@ -139,6 +177,12 @@ const LoginOTP = () => {
                 <p>{error}</p>
               </div>
             )}
+            
+            {success && (
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 text-sm text-green-700">
+                <p>{success}</p>
+              </div>
+            )}
 
             <div className="space-y-5">
               {!expandForm && (
@@ -163,27 +207,90 @@ const LoginOTP = () => {
               )}
 
               {expandForm && (
-                <div className="relative">
-                  <label htmlFor="otp" className="sr-only">OTP</label>
-                  <LeftIcon>
-                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </LeftIcon>
-                  <input
-                    id="otp"
-                    name="otp"
-                    type="number"
-                    required
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className={inputClass}
-                    placeholder="Enter 6-digit OTP"
-                  />
-                </div>
+                <>
+                  <div className="relative">
+                    <label htmlFor="otp" className="sr-only">OTP</label>
+                    <LeftIcon>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </LeftIcon>
+                    <input
+                      id="otp"
+                      name="otp"
+                      type="text"
+                      maxLength="6"
+                      required
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                      className={inputClass}
+                      placeholder="Enter 6-digit OTP"
+                    />
+                  </div>
+
+                  {/* New User Registration Fields */}
+                  {isNewUser && (
+                    <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-800 font-medium mb-2">
+                        Complete your registration
+                      </p>
+                      <div className="relative">
+                        <label htmlFor="name" className="sr-only">Full Name</label>
+                        <LeftIcon>
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </LeftIcon>
+                        <input
+                          id="name"
+                          name="name"
+                          type="text"
+                          required
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className={inputClass}
+                          placeholder="Full Name *"
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <label htmlFor="email" className="sr-only">Email address</label>
+                        <LeftIcon>
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </LeftIcon>
+                        <input
+                          id="email"
+                          name="email"
+                          type="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className={inputClass}
+                          placeholder="Email address *"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Show checkbox only if not already a new user */}
+                  {!isNewUser && (
+                    <div className="flex items-center p-2">
+                      <input
+                        id="isNewUser"
+                        type="checkbox"
+                        checked={isNewUser}
+                        onChange={(e) => setIsNewUser(e.target.checked)}
+                        className="h-4 w-4 text-zinc-900 focus:ring-zinc-800 border-gray-300 rounded cursor-pointer"
+                      />
+                      <label htmlFor="isNewUser" className="ml-2 block text-sm text-gray-700 cursor-pointer">
+                        I'm a new user (need to register)
+                      </label>
+                    </div>
+                  )}
+                </>
               )}
-              
-              <div id="recaptcha-container"></div>
             </div>
 
             <div>

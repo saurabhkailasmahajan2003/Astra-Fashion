@@ -94,7 +94,7 @@ const FAQ = () => {
       questions: [
         {
           q: 'How do I create an account?',
-          a: 'Click on "Sign Up" in the top navigation, enter your email address and create a password. You can also sign up using your Google account for faster registration.'
+          a: 'Click on "Sign Up" in the top navigation, enter your email address and create a password to create your account.'
         },
         {
           q: 'I forgot my password. How do I reset it?',

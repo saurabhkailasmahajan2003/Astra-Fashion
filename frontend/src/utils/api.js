@@ -18,11 +18,19 @@ const apiRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Something went wrong');
+      // Create error with response data attached
+      const error = new Error(data.message || 'Something went wrong');
+      error.response = { data, status: response.status };
+      throw error;
     }
 
     return data;
   } catch (error) {
+    // If it's already our custom error, re-throw it
+    if (error.response) {
+      throw error;
+    }
+    // Otherwise, wrap it
     throw error;
   }
 };
@@ -40,6 +48,20 @@ export const authAPI = {
     return apiRequest('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+    });
+  },
+
+  sendOTP: async (phone) => {
+    return apiRequest('/auth/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    });
+  },
+
+  verifyOTP: async (phone, otp, name = null, email = null) => {
+    return apiRequest('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp, name, email }),
     });
   },
 

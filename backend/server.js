@@ -59,7 +59,7 @@ try {
   app.use('/api/reviews', reviewRoutes);
   console.log('✅ Review routes registered at /api/reviews');
 } catch (error) {
-  console.error('❌ CRITICAL: Failed to register review routes:', error);
+  console.error('❌CRITICAL: Failed to register review routes:', error);
   console.error('   This will cause 404 errors for /api/reviews');
 }
 
@@ -103,8 +103,8 @@ app.listen(PORT, () => {
   console.log('   ✓ /api/reviews');
   console.log('\n✅ All routes registered successfully!\n');
   console.log('🔍 Test review routes:');
-  console.log('   GET  http://localhost:5000/api/reviews/health');
-  console.log('   GET  http://localhost:5000/api/reviews/:productId');
-  console.log('   POST http://localhost:5000/api/reviews\n');
+  console.log('   GET  http://localhost:5500/api/reviews/health');
+  console.log('   GET  http://localhost:5500/api/reviews/:productId');
+  console.log('   POST http://localhost:5500/api/reviews\n');
 });
 

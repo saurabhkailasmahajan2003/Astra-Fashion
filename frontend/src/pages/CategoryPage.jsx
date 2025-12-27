@@ -99,20 +99,24 @@ const CategoryPage = () => {
       });
     }
 
-    // Sort
-    if (filters.sortBy && filters.sortBy !== 'default') {
-      filtered.sort((a, b) => {
-        const priceA = a.finalPrice || a.price;
-        const priceB = b.finalPrice || b.price;
+    // Sort - Default to price low to high if no sort is selected
+    filtered.sort((a, b) => {
+      const priceA = a.finalPrice || a.price || 0;
+      const priceB = b.finalPrice || b.price || 0;
 
-        switch (filters.sortBy) {
-          case 'price-low-high': return priceA - priceB;
-          case 'price-high-low': return priceB - priceA;
-          case 'newest': return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-          default: return 0;
-        }
-      });
-    }
+      // If no sort is selected or sortBy is 'default', sort by price low to high
+      if (!filters.sortBy || filters.sortBy === 'default') {
+        return priceA - priceB;
+      }
+
+      // Apply selected sort
+      switch (filters.sortBy) {
+        case 'price-low-high': return priceA - priceB;
+        case 'price-high-low': return priceB - priceA;
+        case 'newest': return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        default: return priceA - priceB; // Default to low to high
+      }
+    });
 
     setFilteredList(filtered);
     setPage(1); // Reset to page 1 when filters change
@@ -332,45 +336,45 @@ const CategoryPage = () => {
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-4 flex-wrap">
             {/* Breadcrumb Navigation */}
-            {(derivedGender || pathname === '/men' || pathname === '/women') && (
+        {(derivedGender || pathname === '/men' || pathname === '/women') && (
               <nav>
                 <ol className="flex items-center space-x-2 text-sm text-gray-500">
-                  <li>
+              <li>
                     <Link to="/" className="hover:text-gray-900 transition-colors">
                       Home
                     </Link>
-                  </li>
-                  <li className="text-gray-400">/</li>
-                  {derivedGender && (
-                    <>
-                      <li>
+              </li>
+              <li className="text-gray-400">/</li>
+              {derivedGender && (
+                <>
+                  <li>
                         <Link to={`/${derivedGender}`} className="hover:text-gray-900 transition-colors capitalize">
-                          {derivedGender}
-                        </Link>
-                      </li>
-                      {category && (
-                        <>
-                          <li className="text-gray-400">/</li>
+                      {derivedGender}
+                    </Link>
+                  </li>
+                  {category && (
+                    <>
+                      <li className="text-gray-400">/</li>
                           <li className="text-gray-900 capitalize">
-                            {category === 'tshirt' ? 'T-Shirt' : category}
-                          </li>
-                        </>
-                      )}
+                        {category === 'tshirt' ? 'T-Shirt' : category}
+                      </li>
                     </>
                   )}
-                  {!derivedGender && (pathname === '/men' || pathname === '/women') && (
+                </>
+              )}
+              {!derivedGender && (pathname === '/men' || pathname === '/women') && (
                     <li className="text-gray-900 capitalize">
-                      {pathname.replace('/', '')}
-                    </li>
-                  )}
-                </ol>
-              </nav>
-            )}
-            
+                  {pathname.replace('/', '')}
+                </li>
+              )}
+            </ol>
+          </nav>
+        )}
+
             {/* Title */}
-            <h1 className="text-3xl font-bold text-gray-900">
-              {isLoading && !pageTitle ? 'Loading...' : pageTitle}
-            </h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isLoading && !pageTitle ? 'Loading...' : pageTitle}
+          </h1>
           </div>
 
           <div className="flex items-center gap-4">
@@ -382,23 +386,23 @@ const CategoryPage = () => {
             )}
             
             {/* Filter Toggle Button */}
-            <button
-              onClick={() => {
-                if (window.innerWidth >= 1024) {
-                  setShowFilters(!showFilters);
-                } else {
-                  setShowMobileFilters(!showMobileFilters);
-                }
-              }}
+          <button
+            onClick={() => {
+              if (window.innerWidth >= 1024) {
+                setShowFilters(!showFilters);
+              } else {
+                setShowMobileFilters(!showMobileFilters);
+              }
+            }}
               className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
-              disabled={isLoading}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              <span className="hidden lg:inline">{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
-              <span className="lg:hidden">Filters</span>
-            </button>
+            disabled={isLoading}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            <span className="hidden lg:inline">{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
+            <span className="lg:hidden">Filters</span>
+          </button>
           </div>
         </div>
         
